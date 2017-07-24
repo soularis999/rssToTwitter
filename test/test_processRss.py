@@ -1,7 +1,7 @@
 import unittest
 import mock
 
-from processRss import process, DRY_RUN
+from processRss import process, cleanup_feeds, DRY_RUN
 from feedConfig import SERVICE
 from collections import namedtuple
 
@@ -12,6 +12,7 @@ class TestProcess(unittest.TestCase):
     @mock.patch("processRss.Config")
     def test_process(self, mock_config, mock_post, mock_parser):
         # when
+        mock_config.return_value.mainService.return_value.max_posts = 5
         mock_config.return_value.mainService.return_value.appTwitterKey = "test1AppKey"
         mock_config.return_value.mainService.return_value.appTwitterSecret = "test1AppSecret"
         mock_config.return_value.mainService.return_value.userTwitterKey = "test1UserKey"
@@ -54,15 +55,70 @@ class TestProcess(unittest.TestCase):
         self.assertEquals(mock_parser.call_args_list, [mock.call("test1url"), mock.call("test2url")])
         # test post is called
         self.assertEqual(mock_post.return_value.post.call_args_list,
-                         [mock.call('test1UserKey', 'test1UserSecret', 'post 2 title httpd://test2.com'),
-                          mock.call('test1UserKey', 'test1UserSecret', 'post 1 title httpd://test1.com'),
-                          mock.call('test1UserKey', 'test1UserSecret', 'post 2 title httpd://test2.com')])
+                         [
+                             mock.call('test1UserKey', 'test1UserSecret', 'post 1 title httpd://test1.com'),
+                             mock.call('test1UserKey', 'test1UserSecret', 'post 2 title httpd://test2.com'),
+                             mock.call('test1UserKey', 'test1UserSecret', 'post 2 title httpd://test2.com')])
         # test store is called to save data
         self.assertEquals(mock_config.return_value.__setitem__.call_args_list,
                           [mock.call('service1', SERVICE("test1url", 5, "post2", 1500527415L)),
                            mock.call('service2', SERVICE("test2url", 1, "post2", 1500527415L))])
         # test write is called
         mock_config.return_value.writeStore.assert_called_once_with()
+
+    def test_cleanup_feeds(self):
+        # given
+        t = namedtuple("test", "numPosts lastProcessedId")
+
+        # when
+        result = list(cleanup_feeds(t(5, None), None))
+        # then
+        self.assertEqual(result, [])
+
+        # when
+        result = list(cleanup_feeds(t(5, None), []))
+        # then
+        self.assertEqual(result, [])
+
+        # when
+        result = list(cleanup_feeds(t(5, None), [{"id": "test1"},{"id": "test2"}]))
+        # then
+        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(None, None), [{"id": "test1"}, {"id": "test2"}]))
+        # then
+        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(1, None), [{"id": "test1"}, {"id": "test2"}]))
+        # then
+        self.assertEqual(result, [{"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(2, None), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
+        # then
+        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(3, None), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
+        # then
+        self.assertEqual(result, [{"id": "test3"}, {"id": "test2"}, {"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(3, "test1"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
+        # then
+        self.assertEqual(result, [])
+
+        # when
+        result = list(cleanup_feeds(t(3, "test2"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
+        # then
+        self.assertEqual(result, [{"id": "test1"}])
+
+        # when
+        result = list(cleanup_feeds(t(3, "test3"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
+        # then
+        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
 
 
 if __name__ == "__main__":

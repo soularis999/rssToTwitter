@@ -7,7 +7,7 @@ from collections import namedtuple
 log = logging.getLogger(__name__)
 
 SERVICE = namedtuple("Service", "url numPosts lastProcessedId lastProcessedUpdateTimestamp")
-MAIN = namedtuple("Main", "storePath appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+MAIN = namedtuple("Main", "storePath numToProcessAtOneTime appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
 
 class Config(object):
     """
@@ -38,6 +38,7 @@ class Config(object):
             if section_name == "MAIN":
                 self._main = MAIN(
                     config.get(section, 'store_path') if config.has_option(section, 'store_path') else "~/.twStore",
+                    int(config.get(section, 'num_process_at_one_time')) if config.has_option(section, 'num_process_at_one_time') else 15,
                     config.get(section, 'application_twitter_key'),
                     config.get(section, 'application_twitter_secret'),
                     config.get(section, 'user_twitter_key'),

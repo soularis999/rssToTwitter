@@ -31,6 +31,7 @@ class TestConfig(unittest.TestCase):
 
         # then
         self.assertEqual(config.mainService().storePath, './twStore')
+        self.assertEqual(config.mainService().numToProcessAtOneTime, 10)
         self.assertEqual(config.mainService().appTwitterKey, 'test1')
         self.assertEqual(config.mainService().appTwitterSecret, 'test2')
         self.assertEqual(config.mainService().userTwitterKey, 'test3')
@@ -72,7 +73,7 @@ class TestConfig(unittest.TestCase):
         config["T3"] = feedConfig.SERVICE("url3", 3, None, 5555545)
         config["T4"] = feedConfig.SERVICE("url4", 4, "id4", 444555666)
         config["T5"] = feedConfig.SERVICE("url5", 5, "id5", 555666777)
-        config._main = feedConfig.MAIN("/tmp/.twStore", None, None, None, None)
+        config._main = feedConfig.MAIN("/tmp/.twStore", 10, None, None, None, None)
 
         # when
         config.writeStore()
