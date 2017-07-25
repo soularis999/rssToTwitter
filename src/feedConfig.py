@@ -6,18 +6,21 @@ from collections import namedtuple
 
 log = logging.getLogger(__name__)
 
-SERVICE = namedtuple("Service", "url numPosts lastProcessedId lastProcessedUpdateTimestamp")
-MAIN = namedtuple("Main", "storePath numToProcessAtOneTime appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+SERVICE = namedtuple("Service", "serviceName url numPosts lastProcessedId lastProcessedUpdateTimestamp")
+MAIN = namedtuple("Main",
+                  "storePath numToProcessAtOneTime appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+
 
 class Config(object):
     """
     Purpose of the class is to keep information about configurations
     """
 
-    def __init__(self):
+    def __init__(self, dry_run=False):
         self._services = {}
         self._store = {}
         self._main = None
+        self._dry_run = dry_run
         pass
 
     def open(self, *files):
@@ -38,13 +41,15 @@ class Config(object):
             if section_name == "MAIN":
                 self._main = MAIN(
                     config.get(section, 'store_path') if config.has_option(section, 'store_path') else "~/.twStore",
-                    int(config.get(section, 'num_process_at_one_time')) if config.has_option(section, 'num_process_at_one_time') else 15,
+                    int(config.get(section, 'num_process_at_one_time')) if config.has_option(section,
+                                                                                             'num_process_at_one_time') else 15,
                     config.get(section, 'application_twitter_key'),
                     config.get(section, 'application_twitter_secret'),
                     config.get(section, 'user_twitter_key'),
                     config.get(section, 'user_twitter_secret'))
             else:
                 service = SERVICE(
+                    section_name,
                     config.get(section, 'url'),
                     config.getint(section, "numPosts") if config.has_option(section, "numPosts") else None,
                     None,
@@ -97,6 +102,7 @@ class Config(object):
 
                 if key in self._services.keys():
                     self._services[key] = SERVICE(
+                        self._services[key].serviceName,
                         self._services[key].url,
                         self._services[key].numPosts,
                         data[1],
@@ -114,16 +120,17 @@ class Config(object):
         log.debug("writing store %s" % f_path)
 
         count = 0
-        with file(f_path, 'w') as f:
-            for line in filter(lambda v: v, map(
-                    lambda (key, value):
-                            '%s|%s|%s\n' % (key, value.lastProcessedId,
-                                            value.lastProcessedUpdateTimestamp)
-                    if value.lastProcessedId and value.lastProcessedUpdateTimestamp else None,
-                    self._services.iteritems())):
-                count += 1
-                log.debug("Writing %s" % line)
-                f.write(line)
+        if not self._dry_run:
+            with file(f_path, 'w') as f:
+                for line in filter(lambda v: v, map(
+                        lambda (key, value):
+                                '%s|%s|%s\n' % (key, value.lastProcessedId,
+                                                value.lastProcessedUpdateTimestamp)
+                        if value.lastProcessedId and value.lastProcessedUpdateTimestamp else None,
+                        self._services.iteritems())):
+                    count += 1
+                    log.debug("Writing %s" % line)
+                    f.write(line)
 
         log.info("Saved %f records" % count)
 
