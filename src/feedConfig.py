@@ -53,7 +53,7 @@ class Config(object):
                     section_name,
                     config.get(section, 'url'),
                     config.getint(section, "numPosts") if config.has_option(section, "numPosts") else None,
-                    storeData[section] if section in storeData else None
+                    storeData[section_name] if section_name in storeData else None
                 )
                 self._services[section_name] = service
                 log.debug("Service %s" % (self._services[section_name],))
@@ -91,7 +91,7 @@ class Config(object):
         """
         store = {}
         f_path = os.path.expanduser(self._store_path)
-        log.debug("processing store %s" % f_path)
+        log.info("reading store %s" % f_path)
 
         if not os.path.exists(f_path):
             return store
@@ -119,7 +119,7 @@ class Config(object):
         :return:
         """
         f_path = os.path.expanduser(self._store_path)
-        log.debug("writing store %s" % f_path)
+        log.info("writing store %s" % f_path)
 
         count = 0
         if not self._dry_run:
@@ -129,7 +129,7 @@ class Config(object):
 
                 def writeFunc(service_name, store, file):
                     id = store.lastProcessedId if store.lastProcessedId else ''
-                    time = store.lastProcessedUpdateTimestamp if store.lastProcessedUpdateTimestamp else ''
+                    time = '%i' % store.lastProcessedUpdateTimestamp if store.lastProcessedUpdateTimestamp else ''
                     text = '%s|%s|%s\n' % (service_name, id, time)
                     file.write(text)
 
@@ -150,7 +150,7 @@ class Config(object):
 
                 # this chain applies the remaining stored data so we would not start reposting the old posts if
                 # old service was reenabled
-                result_text = map(lambda sname, store: writeFunc(sname, store, f), store_data.iteritems())
+                result_text = map(lambda sname: writeFunc(sname, store_data[sname], f), store_data.keys())
 
                 count += len(result_text)
 

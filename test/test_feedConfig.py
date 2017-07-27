@@ -5,7 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-TMP_STORE_FILE_PATH = "/tmp/.twStore"
+TMP_STORE_FILE_PATH = "/tmp/twStore"
 
 
 class TestConfig(unittest.TestCase):
@@ -55,6 +55,8 @@ class TestConfig(unittest.TestCase):
 
     def test_mergingStoreAndConfig(self):
         config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
+        with file(TMP_STORE_FILE_PATH, 'w') as f:
+            f.writelines(['NETFLIX|testid1|2348233\n', 'YAHOO|testid22223423|2394230\n'])
 
         # when
         config.open('./testConfig.cfg', './testConfig2.cfg')
@@ -68,9 +70,14 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config['NETFLIX'].serviceName, 'NETFLIX')
         self.assertEqual(config['NETFLIX'].url, 'https://netflix.com/feed/netflix-techblog')
         self.assertEqual(config['NETFLIX'].numPosts, 1)
-        self.assertIsNone(config['NETFLIX'].store)
+        self.assertEqual(config['NETFLIX'].store, feedConfig.STORE('NETFLIX', 'testid1', 2348233l))
 
         self.assertEqual(['LINKEDIN', 'NETFLIX'], sorted(config.services()))
+
+        config.writeStore()
+        self.assertEqual(file(TMP_STORE_FILE_PATH).readlines(),
+                         ['NETFLIX|testid1|2348233\n', 'YAHOO|testid22223423|2394230\n'])
+
 
     def test_writing(self):
         config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)

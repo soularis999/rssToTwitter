@@ -1,12 +1,18 @@
 import unittest
 import mock
+import os
 
 from processRss import process, cleanup_feeds
-from feedConfig import SERVICE
+from feedConfig import SERVICE, STORE
+from test_feedConfig import TMP_STORE_FILE_PATH
 from collections import namedtuple
 
 
 class TestProcess(unittest.TestCase):
+    def setUp(self):
+        if os.path.exists(TMP_STORE_FILE_PATH):
+            os.remove(TMP_STORE_FILE_PATH)
+
     @mock.patch("processRss.parse")
     @mock.patch("processRss.TwitterPost")
     @mock.patch("processRss.Config")
@@ -47,7 +53,7 @@ class TestProcess(unittest.TestCase):
             (service2, "postA", 1500527415): False
         }
 
-        process(False, "file1", "file2")
+        process(False, TMP_STORE_FILE_PATH, "file1", "file2")
 
         # then
         # test config open is called
@@ -70,64 +76,51 @@ class TestProcess(unittest.TestCase):
         mock_post.return_value.post.assert_called_once_with('test1UserKey', 'test1UserSecret')
         # test store is called to save data
         self.assertEquals(mock_config.return_value.__setitem__.call_args_list,
-                          [mock.call('service1', SERVICE('service1', 'test1url', 5, "postA", 1500527415L)),
-                           mock.call('service2', SERVICE('service2', 'test2url', 1, 'postA', 1500527415))])
+                          [mock.call('service1',
+                                     SERVICE('service1', 'test1url', 5, STORE('service1', 'postA', 1500527415))),
+                           mock.call('service2',
+                                     SERVICE('service2', 'test2url', 1, STORE('service2', 'postA', 1500527415)))
+                           ])
         # test write is called
         mock_config.return_value.writeStore.assert_called_once_with()
 
     def test_cleanup_feeds(self):
-        # given
-        t = namedtuple("test", "numPosts lastProcessedId")
+        # given test case
+        test_case = namedtuple('TestCase', 'store numItems data result')
+        test_cases = [
+            test_case(None, 5, None, []),
+            test_case(STORE("t1", None, None), 5, None, []),
+            test_case(STORE("t1", "test1", None), 5, None, []),
+            test_case(STORE("t1", None, 1309458234), 5, None, []),
+            test_case(STORE("t1", "test1", 1309458234), 5, None, []),
 
-        # when
-        result = list(cleanup_feeds(t(5, None), None))
-        # then
-        self.assertEqual(result, [])
+            test_case(None, 5, data=[{"id": "test1"}], result=[{"id": "test1"}]),
+            test_case(STORE("t1", None, None), 5, data=[{"id": "test1"}], result=[{"id": "test1"}]),
+            test_case(STORE("t1", "test1", None), 5, data=[{"id": "test1"}], result=[]),
+            test_case(STORE("t1", None, 1309458234), 5, data=[{"id": "test1"}], result=[{"id": "test1"}]),
+            test_case(STORE("t1", "test1", 1309458234), 5, data=[{"id": "test1"}], result=[]),
+            test_case(STORE("t1", "test2", None), 5, data=[{"id": "test1"}], result=[{"id": "test1"}]),
+            test_case(STORE("t1", "bla", None), 5, data=[{"id": "test1"}], result=[{"id": "test1"}]),
 
-        # when
-        result = list(cleanup_feeds(t(5, None), []))
-        # then
-        self.assertEqual(result, [])
+            test_case(None, 5, data=[{"id": "test1"}, {"id": "test2"}], result=[{"id": "test2"}, {"id": "test1"}]),
+            test_case(STORE("t1", None, None), 5, data=[{"id": "test1"}, {"id": "test2"}],
+                      result=[{"id": "test2"}, {"id": "test1"}]),
+            test_case(STORE("t1", "test1", None), 5, data=[{"id": "test1"}, {"id": "test2"}], result=[]),
+            test_case(STORE("t1", None, 1309458234), 5, data=[{"id": "test1"}, {"id": "test2"}],
+                      result=[{"id": "test2"}, {"id": "test1"}]),
+            test_case(STORE("t1", "test1", 1309458234), 5, data=[{"id": "test1"}, {"id": "test2"}], result=[]),
+            test_case(STORE("t1", "test2", None), 5, data=[{"id": "test1"}, {"id": "test2"}], result=[{"id": "test1"}]),
+            test_case(STORE("t1", "bla", None), 5, data=[{"id": "test1"}, {"id": "test2"}],
+                      result=[{"id": "test2"}, {"id": "test1"}])
+        ]
 
-        # when
-        result = list(cleanup_feeds(t(5, None), [{"id": "test1"}, {"id": "test2"}]))
-        # then
-        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
+        for index, case in enumerate(test_cases):
+            print index, ' ', case
 
-        # when
-        result = list(cleanup_feeds(t(None, None), [{"id": "test1"}, {"id": "test2"}]))
-        # then
-        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
-
-        # when
-        result = list(cleanup_feeds(t(1, None), [{"id": "test1"}, {"id": "test2"}]))
-        # then
-        self.assertEqual(result, [{"id": "test1"}])
-
-        # when
-        result = list(cleanup_feeds(t(2, None), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
-        # then
-        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
-
-        # when
-        result = list(cleanup_feeds(t(3, None), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
-        # then
-        self.assertEqual(result, [{"id": "test3"}, {"id": "test2"}, {"id": "test1"}])
-
-        # when
-        result = list(cleanup_feeds(t(3, "test1"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
-        # then
-        self.assertEqual(result, [])
-
-        # when
-        result = list(cleanup_feeds(t(3, "test2"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
-        # then
-        self.assertEqual(result, [{"id": "test1"}])
-
-        # when
-        result = list(cleanup_feeds(t(3, "test3"), [{"id": "test1"}, {"id": "test2"}, {"id": "test3"}]))
-        # then
-        self.assertEqual(result, [{"id": "test2"}, {"id": "test1"}])
+            # when - test with None store
+            result = cleanup_feeds(case.store, case.numItems, case.data)
+            # then
+            self.assertEqual(list(result), case.result)
 
 
 if __name__ == "__main__":

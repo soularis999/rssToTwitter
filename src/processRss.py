@@ -12,7 +12,7 @@ from twitterPost import TwitterPost
 from feedConfig import Config, SERVICE, STORE
 from datetime import datetime
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
@@ -27,11 +27,12 @@ def get_id_from_post(post):
     return post['id'].encode('utf-8') if 'id' in post and post['id'] else url
 
 
-def cleanup_feeds(conf_data, entries):
+def cleanup_feeds(store, num_posts, entries):
     """
     Given the list of entries the method will return the trimmed list of posts that can be published
     The filtering comprises of limiting the posts to only those that were not published and limiting to max configured
-    number of posts for the particular service
+    number of posts for the particular service. Assumption is that the posts are already sorted from most recent to most
+    furthest
     :param conf_data:
     :param entries:
     :return:
@@ -39,10 +40,10 @@ def cleanup_feeds(conf_data, entries):
     if not entries:
         return []
 
-    first_post = min(len(entries), conf_data.numPosts if conf_data.numPosts else len(entries))
-    if conf_data.lastProcessedId:
+    first_post = min(len(entries), num_posts if num_posts else len(entries))
+    if store:
         for index, post in enumerate(entries[:first_post]):
-            if conf_data.lastProcessedId == get_id_from_post(post):
+            if store.lastProcessedId == get_id_from_post(post):
                 first_post = index
                 break
 
@@ -79,14 +80,14 @@ def process_posts(conf_data, post, tp):
     return tp.prepare(key, title, url)
 
 
-def process(dryRun=False, *files):
+def process(dryRun=False, storeFile='~/.twStore', *files):
     """
     Given the config files the method coordinates the retrieval of the data and publishing it to twitter
     :param dryRun: is this a test run - in this case data will be read but not published to twitter and store will not
         be updated
     :param files: config files
     """
-    config = Config(dryRun)
+    config = Config(dryRun, storeFile)
     config.open(*files)
 
     tp = TwitterPost(config.mainService().appTwitterKey, config.mainService().appTwitterSecret, dryRun)
@@ -98,7 +99,7 @@ def process(dryRun=False, *files):
             log.error("Error getting data for %s -> %s" % (conf_data.url, feeds))
             continue
 
-        for post in cleanup_feeds(conf_data, feeds['entries']):
+        for post in cleanup_feeds(conf_data.store, conf_data.numPosts, feeds['entries']):
             if num_items >= config.mainService().numToProcessAtOneTime:
                 break
 
@@ -135,13 +136,14 @@ def usage():
              Where:
              -c | -- config : comma delimited list of the config files
              -d | --dryrun: do not publish to twitter - just get data and update the store
+             -s | --store: the location of store file - defaults to ~/.twStore
              -h | --help: help
              """
 
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdc:", ["help", "dryRun", "config"])
+        opts, args = getopt.getopt(sys.argv[1:], "hdc:s:", ["help", "dryRun", "config", "store"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized"
@@ -150,6 +152,7 @@ def main():
 
     isDryRun = False
     conFileList = []
+    storeFile = '~/.twStore'
     for option, var in opts:
         if option in ("-h", "--help"):
             usage()
@@ -158,8 +161,10 @@ def main():
             isDryRun = True
         elif option in ("-c", "--config"):
             conFileList = var.split(",")
+        elif option in ("-s", "--store"):
+            storeFile = var
 
-    process(isDryRun, *conFileList)
+    process(isDryRun, storeFile, *conFileList)
 
 
 if __name__ == "__main__":

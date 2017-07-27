@@ -41,7 +41,7 @@ class TwitterPost(object):
             self._paramsToSend["status"] = post[1]
             query = urllib.urlencode(self._paramsToSend)
 
-            log.info("Posting: " + TWITTER_STATUS_POST_URL + query)
+            log.debug("Posting: %s -> %s%s" % (userKey, TWITTER_STATUS_POST_URL, query))
             result = True
             if not self._dryRun:
                 (resp, content) = client.request(TWITTER_STATUS_POST_URL + query, method="POST")
