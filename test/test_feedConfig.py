@@ -5,14 +5,16 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+TMP_STORE_FILE_PATH = "/tmp/.twStore"
+
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
-        if (os.path.exists("/tmp/.twStore")):
-            os.remove("/tmp/.twStore")
+        if (os.path.exists(TMP_STORE_FILE_PATH)):
+            os.remove(TMP_STORE_FILE_PATH)
 
     def test_fileparse(self):
-        config = feedConfig.Config()
+        config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
 
         # when
         config.open(os.path.expanduser('testConfig.cfg'))
@@ -28,13 +30,12 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(['NETFLIX'], config.services())
 
     def test_multipleFiles(self):
-        config = feedConfig.Config()
+        config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
 
         # when
         config.open(os.path.expanduser('testConfig.cfg'), os.path.expanduser('testConfig2.cfg'))
 
         # then
-        self.assertEqual(config.mainService().storePath, './twStore')
         self.assertEqual(config.mainService().numToProcessAtOneTime, 10)
         self.assertEqual(config.mainService().appTwitterKey, 'test1')
         self.assertEqual(config.mainService().appTwitterSecret, 'test2')
@@ -53,7 +54,7 @@ class TestConfig(unittest.TestCase):
             unittest.main(TestConfig)
 
     def test_mergingStoreAndConfig(self):
-        config = feedConfig.Config()
+        config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
 
         # when
         config.open('./testConfig.cfg', './testConfig2.cfg')
@@ -62,59 +63,62 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config['LINKEDIN'].serviceName, 'LINKEDIN')
         self.assertEqual(config['LINKEDIN'].url, 'https://engineering.linkedin.com/blog.rss')
         self.assertEqual(config['LINKEDIN'].numPosts, 1)
-        self.assertEqual(config['LINKEDIN'].lastProcessedId, None)
-        self.assertEqual(config['LINKEDIN'].lastProcessedUpdateTimestamp, None)
+        self.assertIsNone(config['LINKEDIN'].store)
 
         self.assertEqual(config['NETFLIX'].serviceName, 'NETFLIX')
         self.assertEqual(config['NETFLIX'].url, 'https://netflix.com/feed/netflix-techblog')
         self.assertEqual(config['NETFLIX'].numPosts, 1)
-        self.assertEqual(config['NETFLIX'].lastProcessedId, 'testid1')
-        self.assertEqual(config['NETFLIX'].lastProcessedUpdateTimestamp, 2348233)
+        self.assertIsNone(config['NETFLIX'].store)
 
         self.assertEqual(['LINKEDIN', 'NETFLIX'], sorted(config.services()))
 
     def test_writing(self):
-        config = feedConfig.Config()
-        config["T1"] = feedConfig.SERVICE("T1", "url1", 1, None, None)
-        config["T2"] = feedConfig.SERVICE("T2", "url2", 2, "id2", None)
-        config["T3"] = feedConfig.SERVICE("T3", "url3", 3, None, 5555545)
-        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, "id4", 444555666)
-        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, "id5", 555666777)
-        config._main = feedConfig.MAIN("/tmp/.twStore", 10, None, None, None, None)
+        config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
+        config["T1"] = feedConfig.SERVICE("T1", "url1", 1, None)
+        config["T2"] = feedConfig.SERVICE("T2", "url2", 2, feedConfig.STORE("T2", "id2", None))
+        config["T3"] = feedConfig.SERVICE("T3", "url3", 3, feedConfig.STORE("T3", None, 5555545))
+        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, feedConfig.STORE("T4", "id4", 444555666))
+        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, feedConfig.STORE("T5", "id5", 555666777))
+        config._main = feedConfig.MAIN(10, None, None, None, None)
 
         # when
         config.writeStore()
 
         # then
-        self.assertTrue(os.path.exists("/tmp/.twStore"))
-        self.assertEqual(file("/tmp/.twStore").readlines(), ["T4|id4|444555666\n", "T5|id5|555666777\n"])
+        self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
+        self.assertEqual(file(TMP_STORE_FILE_PATH).readlines(),
+                         ["T4|id4|444555666\n", "T5|id5|555666777\n", "T2|id2|\n", "T3||5555545\n"])
 
         # when - try reading the file back
-        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, "id4New", 11111111)
-        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, "id5New", 22222222)
-        config._readStore()
+        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, feedConfig.STORE("T4", "id4New", 11111111))
+        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, feedConfig.STORE("T5", "id5New", 22222222))
+        store_data = config._readStore()
 
         # then
-        self.assertEqual(config['T4'].lastProcessedId, 'id4')
-        self.assertEqual(config['T4'].lastProcessedUpdateTimestamp, 444555666)
+        self.assertIsNone(store_data['T2'])
+        self.assertIsNone(store_data['T3'])
 
-        self.assertEqual(config['T5'].lastProcessedId, 'id5')
-        self.assertEqual(config['T5'].lastProcessedUpdateTimestamp, 555666777)
+        self.assertEqual(store_data['T4'].serviceName, 'T4')
+        self.assertEqual(store_data['T4'].lastProcessedId, 'id4')
+        self.assertEqual(store_data['T4'].lastProcessedUpdateTimestamp, 444555666)
+
+        self.assertEqual(store_data['T5'].serviceName, 'T5')
+        self.assertEqual(store_data['T5'].lastProcessedId, 'id5')
+        self.assertEqual(store_data['T5'].lastProcessedUpdateTimestamp, 555666777)
 
     def test_dry_run(self):
-        config = feedConfig.Config(True)
-        config["T1"] = feedConfig.SERVICE("T1", "url1", 1, None, None)
-        config["T2"] = feedConfig.SERVICE("T2", "url2", 2, "id2", None)
-        config["T3"] = feedConfig.SERVICE("T3", "url3", 3, None, 5555545)
-        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, "id4", 444555666)
-        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, "id5", 555666777)
-        config._main = feedConfig.MAIN("/tmp/.twStore", 10, None, None, None, None)
+        config = feedConfig.Config(True, store_path=TMP_STORE_FILE_PATH)
+        config["T1"] = feedConfig.SERVICE("T1", "url1", 1, None)
+        config["T2"] = feedConfig.SERVICE("T2", "url2", 2, feedConfig.STORE("T2", "id2", None))
+        config["T3"] = feedConfig.SERVICE("T3", "url3", 3, feedConfig.STORE("T3", None, 5555545))
+        config["T4"] = feedConfig.SERVICE("T4", "url4", 4, feedConfig.STORE("T4", "id4", 444555666))
+        config["T5"] = feedConfig.SERVICE("T5", "url5", 5, feedConfig.STORE("T5", "id5", 555666777))
 
         # when
         config.writeStore()
 
         # then
-        self.assertFalse(os.path.exists("/tmp/.twStore"))
+        self.assertFalse(os.path.exists(TMP_STORE_FILE_PATH))
 
 
 if __name__ == "__main__":

@@ -9,19 +9,33 @@ import getopt
 
 from feedparser import parse
 from twitterPost import TwitterPost
-from feedConfig import Config, SERVICE
+from feedConfig import Config, SERVICE, STORE
 from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
 def get_id_from_post(post):
+    """
+    Given the post the method returns the derived id of the post
+    :param post: post
+    :return: id
+    """
     title = post['title'].encode('utf-8') if 'title' in post and post['title'] else None
     url = post['link'].encode('utf-8') if 'link' in post and post['link'] else title
     return post['id'].encode('utf-8') if 'id' in post and post['id'] else url
 
+
 def cleanup_feeds(conf_data, entries):
+    """
+    Given the list of entries the method will return the trimmed list of posts that can be published
+    The filtering comprises of limiting the posts to only those that were not published and limiting to max configured
+    number of posts for the particular service
+    :param conf_data:
+    :param entries:
+    :return:
+    """
     if not entries:
         return []
 
@@ -35,7 +49,7 @@ def cleanup_feeds(conf_data, entries):
     return reversed(entries[:first_post])
 
 
-def parse_published(post):
+def parse_published_date(post):
     """
     Parse publisher and return datetime object
     """
@@ -59,7 +73,7 @@ def process_posts(conf_data, post, tp):
     title = post['title'].encode('utf-8') if 'title' in post and post['title'] else None
     url = post['link'].encode('utf-8') if 'link' in post and post['link'] else None
     id = get_id_from_post(post)
-    date = long((parse_published(post) - datetime.utcfromtimestamp(0)).total_seconds())
+    date = (parse_published_date(post) - datetime.utcfromtimestamp(0)).total_seconds()
 
     key = (conf_data, id, date)
     return tp.prepare(key, title, url)
@@ -100,17 +114,19 @@ def process(dryRun=False, *files):
 
     # get results dict indexed by (service id / post id) key
     results = tp.post(config.mainService().userTwitterKey, config.mainService().userTwitterSecret)
+
     filtered_services = {}
-    for item in sorted(filter(lambda key: results[key], results.keys()), key=lambda key: key[2], reverse=True):
-        conf_data = item[0]
-        date = item[2]
+    for key in sorted(results.keys(), key=lambda key: key[2], reverse=True):
+        log.debug("Keys %s -> %s" % (key, results[key]))
+        (conf_data, post_id, date) = key[:3]
         if conf_data not in filtered_services or filtered_services[conf_data][2] < date:
-            filtered_services[conf_data] = item
+            filtered_services[conf_data] = key
 
     for conf_data, item in filtered_services.iteritems():
-        config[conf_data.serviceName] = SERVICE(conf_data.serviceName, conf_data.url, conf_data.numPosts, item[1],
-                                                item[2])
+        config[conf_data.serviceName] = SERVICE(conf_data.serviceName, conf_data.url, conf_data.numPosts,
+                                                STORE(conf_data.serviceName, item[1], item[2]))
 
+    # in the end - write the store
     config.writeStore()
 
 
@@ -148,5 +164,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

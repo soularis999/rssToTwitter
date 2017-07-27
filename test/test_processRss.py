@@ -11,8 +11,8 @@ class TestProcess(unittest.TestCase):
     @mock.patch("processRss.TwitterPost")
     @mock.patch("processRss.Config")
     def test_process(self, mock_config, mock_post, mock_parser):
-        service1 = SERVICE("service1", "test1url", 5, None, None)
-        service2 = SERVICE("service2", "test2url", 1, None, None)
+        service1 = SERVICE("service1", "test1url", 5, None)
+        service2 = SERVICE("service2", "test2url", 1, None)
 
         # when
         mock_config.return_value.mainService.return_value.max_posts = 5
@@ -70,7 +70,8 @@ class TestProcess(unittest.TestCase):
         mock_post.return_value.post.assert_called_once_with('test1UserKey', 'test1UserSecret')
         # test store is called to save data
         self.assertEquals(mock_config.return_value.__setitem__.call_args_list,
-                          [mock.call('service1', SERVICE('service1', 'test1url', 5, "postA", 1500527415L))])
+                          [mock.call('service1', SERVICE('service1', 'test1url', 5, "postA", 1500527415L)),
+                           mock.call('service2', SERVICE('service2', 'test2url', 1, 'postA', 1500527415))])
         # test write is called
         mock_config.return_value.writeStore.assert_called_once_with()
 
