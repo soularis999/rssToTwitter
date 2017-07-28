@@ -2,21 +2,21 @@ import logging
 
 import mock
 import unittest
-import twitterPost
+import twitter_post
 
-from feedConfig import TWITTER
+from feed_config import TWITTER
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class TestTwitterPost(unittest.TestCase):
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_request_successful(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet")
         results = post.post()
 
@@ -28,13 +28,13 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_long_text(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), False)
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), False)
         post.prepare("1",
                      "tweet this please very very very long string of 150 characters and longer and longer and longer and longer and longer and longer and longer and logner",
                      "test123")
@@ -50,13 +50,13 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_cache_does_not_persist_between_posts(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet 1")
         results1 = post.post()
         post.prepare("2", "tweet 2")
@@ -73,13 +73,13 @@ class TestTwitterPost(unittest.TestCase):
         self.assertEqual(results1, {"1": True})
         self.assertEqual(results2, {"2": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_request_successful_with_spaces(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         results = post.post()
 
@@ -91,13 +91,13 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_multiple_successfull_posts(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
@@ -111,13 +111,13 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True, "2": True, "3": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_multiple_successfull_posts(self, mock_oauth2):
         # given
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
@@ -133,7 +133,7 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True, "2": True, "3": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_multiple_error_posts(self, mock_oauth2):
         # given
         def effect(*args, **kwargs):
@@ -144,7 +144,7 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.side_effect = effect
 
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
@@ -160,10 +160,10 @@ class TestTwitterPost(unittest.TestCase):
 
         self.assertEqual(results, {"1": True, "2": False, "3": True})
 
-    @mock.patch("twitterPost.oauth2")
+    @mock.patch("twitter_post.oauth2")
     def test_dry_run(self, mock_oauth2):
         # when
-        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), True)
+        post = twitter_post.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), True)
         post.prepare("1", "tweet this please")
         result = post.post()
 

@@ -22,6 +22,7 @@ possible params
 -d, --dryRun [optional]: if you want to just see the items read but not published to twitter
 -s, --store  [optional: default ~/.twStore]: describe where to store the processed items. The script can be reran and the
         last published post will be recored in store to prevent the republishing
+-v, --verbose: verbose output
 -h, --help Help
 
 

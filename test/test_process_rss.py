@@ -3,8 +3,9 @@ import mock
 import os
 
 from processRss import process, cleanup_feeds
-from feedConfig import SERVICE, STORE, TWITTER
-from test_feedConfig import TMP_STORE_FILE_PATH
+from feed_config import SERVICE, TWITTER
+from data_store import FileBasedDataStore, STORE
+from test_data_store import TMP_STORE_FILE_PATH
 from collections import namedtuple
 
 
@@ -16,9 +17,10 @@ class TestProcess(unittest.TestCase):
     @mock.patch("processRss.parse")
     @mock.patch("processRss.TwitterPost")
     @mock.patch("processRss.Config")
-    def test_process(self, mock_config, mock_post, mock_parser):
-        service1 = SERVICE("service1", "test1url", 5, None)
-        service2 = SERVICE("service2", "test2url", 1, None)
+    @mock.patch("processRss.FileBasedDataStore")
+    def test_process(self, data_store, mock_config, mock_post, mock_parser):
+        service1 = SERVICE("service1", "test1url", 5)
+        service2 = SERVICE("service2", "test2url", 1)
         twitter = TWITTER("test1AppKey", "test1AppSecret", "test1UserKey", "test1UserSecret")
 
         # when
@@ -73,14 +75,11 @@ class TestProcess(unittest.TestCase):
                              mock.call((service2, "postA", 1500527415), 'post 2 title', 'httpd://test2.com')])
         mock_post.return_value.post.assert_called_once_with()
         # test store is called to save data
-        self.assertEquals(mock_config.return_value.__setitem__.call_args_list,
-                          [mock.call('service1',
-                                     SERVICE('service1', 'test1url', 5, STORE('service1', 'postA', 1500527415))),
-                           mock.call('service2',
-                                     SERVICE('service2', 'test2url', 1, STORE('service2', 'postA', 1500527415)))
-                           ])
+        self.assertEquals(data_store.return_value.__setitem__.call_args_list,
+                          [mock.call('service1', STORE('service1', 'postA', 1500527415)),
+                           mock.call('service2', STORE('service2', 'postA', 1500527415))])
         # test write is called
-        mock_config.return_value.writeStore.assert_called_once_with()
+        data_store.return_value.write_store.assert_called_once_with()
 
     def test_cleanup_feeds(self):
         # given test case

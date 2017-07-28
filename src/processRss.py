@@ -7,14 +7,13 @@ import logging
 import sys
 import getopt
 
+from data_store import FileBasedDataStore, STORE
 from feedparser import parse
-from twitterPost import TwitterPost
-from feedConfig import Config, SERVICE, STORE
+from twitter_post import TwitterPost
+from feed_config import Config
 from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
-
 
 def get_id_from_post(post):
     """
@@ -80,26 +79,28 @@ def process_posts(conf_data, post, tp):
     return tp.prepare(key, title, url)
 
 
-def process(dryRun=False, storeFile='~/.twStore', *files):
+def process(dry_run=False, store_file='~/.twStore', *files):
     """
     Given the config files the method coordinates the retrieval of the data and publishing it to twitter
     :param dryRun: is this a test run - in this case data will be read but not published to twitter and store will not
         be updated
     :param files: config files
     """
-    config = Config(dryRun, storeFile)
+    store = FileBasedDataStore(dry_run, store_file)
+    config = Config()
     config.open(*files)
 
-    tp = TwitterPost(config.appService("TWITTER"), dryRun)
+    tp = TwitterPost(config.appService("TWITTER"), dry_run)
     num_items = 0
     for service in config.services():
         conf_data = config[service]
+        store_record = store[service]
         feeds = parse(conf_data.url)
         if 'status' not in feeds or feeds['status'] is not 200:
-            log.error("Error getting data for %s -> %s" % (conf_data.url, feeds))
+            log.error("Error getting feeds %s -> %s" % (conf_data.url, feeds))
             continue
 
-        for post in cleanup_feeds(conf_data.store, conf_data.numPosts, feeds['entries']):
+        for post in cleanup_feeds(store_record, conf_data.numPosts, feeds['entries']):
             if num_items >= config.mainService().numToProcessAtOneTime:
                 break
 
@@ -124,11 +125,10 @@ def process(dryRun=False, storeFile='~/.twStore', *files):
             filtered_services[conf_data] = key
 
     for conf_data, item in filtered_services.iteritems():
-        config[conf_data.serviceName] = SERVICE(conf_data.serviceName, conf_data.url, conf_data.numPosts,
-                                                STORE(conf_data.serviceName, item[1], item[2]))
+        store[conf_data.serviceName] = STORE(conf_data.serviceName, item[1], item[2])
 
     # in the end - write the store
-    config.writeStore()
+    store.write_store()
 
 
 def usage():
@@ -136,6 +136,7 @@ def usage():
              Where:
              -d | --dryrun: do not publish to twitter - just get data and update the store
              -s | --store: the location of store file - defaults to ~/.twStore
+             -v | --verbose: the verbose output
              -h | --help: help
              
              <config files> - the list of config files to use
@@ -144,7 +145,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdc:s:", ["help", "dryRun", "config", "store"])
+        opts, args = getopt.getopt(sys.argv[1:], "dhvc:s:", ["dryRun", "help", "verbose", "config", "store"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized"
@@ -153,6 +154,7 @@ def main():
 
     isDryRun = False
     storeFile = '~/.twStore'
+    logLevel = logging.INFO
     for option, var in opts:
         if option in ("-h", "--help"):
             usage()
@@ -161,7 +163,10 @@ def main():
             isDryRun = True
         elif option in ("-s", "--store"):
             storeFile = var
+        elif option in ("-v", "--verbose"):
+            logLevel = logging.DEBUG
 
+    logging.basicConfig(level=logLevel)
     process(isDryRun, storeFile, *args)
 
 

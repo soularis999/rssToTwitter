@@ -13,7 +13,7 @@ class TwitterPost(object):
     In theory you can post with different users but through same application
     """
 
-    def __init__(self, twitter_config, dryRun=False):
+    def __init__(self, twitter_config, dry_run=False):
         """
         The constructor is taking two params, the application key and secret
         :param twitter_config: as described  by namedtuple in feedConfig.TWITTER
@@ -21,8 +21,8 @@ class TwitterPost(object):
         """
         self._consumer = oauth2.Consumer(twitter_config.appTwitterKey, twitter_config.appTwitterSecret)
         self._twitter_config = twitter_config
-        self._paramsToSend = {"status": None}
-        self._dryRun = dryRun
+        self._params = {"status": None}
+        self._dry_run = dry_run
         self._posts = []
 
     def post(self):
@@ -37,12 +37,12 @@ class TwitterPost(object):
 
         results = {}
         for post in self._posts:
-            self._paramsToSend["status"] = post[1]
-            query = urllib.urlencode(self._paramsToSend)
+            self._params["status"] = post[1]
+            query = urllib.urlencode(self._params)
 
-            log.debug("Posting: %s%s" % (TWITTER_STATUS_POST_URL, query))
+            log.info("Posting: %s%s" % (TWITTER_STATUS_POST_URL, query))
             result = True
-            if not self._dryRun:
+            if not self._dry_run:
                 (resp, content) = client.request(TWITTER_STATUS_POST_URL + query, method="POST")
                 if "200" != resp["status"]:
                     log.error("Error posting url %s -> %s" % (query, content))
