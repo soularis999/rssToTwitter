@@ -7,13 +7,14 @@ import logging
 import sys
 import getopt
 
-from data_store import FileBasedDataStore, STORE
+from data_store import FileBasedDataStore, S3BasedDataStore, STORE
 from feedparser import parse
 from twitter_post import TwitterPost
 from feed_config import Config
 from datetime import datetime
 
 log = logging.getLogger(__name__)
+
 
 def get_id_from_post(post):
     """
@@ -79,18 +80,21 @@ def process_posts(conf_data, post, tp):
     return tp.prepare(key, title, url)
 
 
-def process(dry_run=False, store_file='~/.twStore', *files):
+def process(dry_run=False, store_type=0, *files):
     """
     Given the config files the method coordinates the retrieval of the data and publishing it to twitter
-    :param dryRun: is this a test run - in this case data will be read but not published to twitter and store will not
+    :param dry_run: is this a test run - in this case data will be read but not published to twitter and store will not
         be updated
     :param files: config files
     """
-    store = FileBasedDataStore(dry_run, store_file)
-    config = Config()
-    config.open(*files)
+    config = Config(*files)
+    mainConfig = config.globalConfig("MAIN")
+    twitter = config.globalConfig("TWITTER")
+    aws = config.globalConfig("AWS")
 
-    tp = TwitterPost(config.appService("TWITTER"), dry_run)
+    store = FileBasedDataStore(dry_run, mainConfig) if 0 == store_type else S3BasedDataStore(dry_run, mainConfig, aws)
+    tp = TwitterPost(twitter, dry_run)
+
     num_items = 0
     for service in config.services():
         conf_data = config[service]
@@ -101,13 +105,13 @@ def process(dry_run=False, store_file='~/.twStore', *files):
             continue
 
         for post in cleanup_feeds(store_record, conf_data.numPosts, feeds['entries']):
-            if num_items >= config.mainService().numToProcessAtOneTime:
+            if num_items >= mainConfig.numToProcessAtOneTime:
                 break
 
             if process_posts(conf_data, post, tp):
                 num_items += 1
 
-        if num_items >= config.mainService().numToProcessAtOneTime:
+        if num_items >= mainConfig.numToProcessAtOneTime:
             break
 
         log.info("Processed service %s " % service)
@@ -132,10 +136,9 @@ def process(dry_run=False, store_file='~/.twStore', *files):
 
 
 def usage():
-    print """Usage: processRss -d -s ~/.twStore <config files>
+    print """Usage: processRss -d <config files>
              Where:
              -d | --dryrun: do not publish to twitter - just get data and update the store
-             -s | --store: the location of store file - defaults to ~/.twStore
              -v | --verbose: the verbose output
              -h | --help: help
              
@@ -145,7 +148,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dhvc:s:", ["dryRun", "help", "verbose", "config", "store"])
+        opts, args = getopt.getopt(sys.argv[1:], "dht:v", ["dryRun", "help", "type", "verbose"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized"
@@ -153,21 +156,21 @@ def main():
         sys.exit(2)
 
     isDryRun = False
-    storeFile = '~/.twStore'
     logLevel = logging.INFO
+    store_type = 0
     for option, var in opts:
         if option in ("-h", "--help"):
             usage()
             sys.exit()
         elif option in ("-d", "--dryrun"):
             isDryRun = True
-        elif option in ("-s", "--store"):
-            storeFile = var
+        elif option in ("-t", "--type"):
+            store_type = 1
         elif option in ("-v", "--verbose"):
             logLevel = logging.DEBUG
 
     logging.basicConfig(level=logLevel)
-    process(isDryRun, storeFile, *args)
+    process(isDryRun, store_type, *args)
 
 
 if __name__ == "__main__":

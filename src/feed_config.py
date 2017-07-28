@@ -7,14 +7,24 @@ from collections import namedtuple
 
 log = logging.getLogger(__name__)
 
+MAIN = namedtuple("Main", "numToProcessAtOneTime storeFileName")
 SERVICE = namedtuple("Service", "serviceName url numPosts")
-MAIN = namedtuple("Main", "numToProcessAtOneTime")
+AWS_STORAGE = namedtuple("AWS", "awsAccessKey awsAccessSecret awsBucket")
+FILE_STORAGE = namedtuple("File", "store")
 TWITTER = namedtuple("TwitterApp", "appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
 
 APP_TWITTER_KEY_ENV = "APP_TWITTER_KEY"
 APP_TWITTER_SECRET_ENV = "APP_TWITTER_SECRET"
 USER_TWITTER_KEY_ENV = "USER_TWITTER_KEY"
 USER_TWITTER_SECRET_ENV = "USER_TWITTER_SECRET"
+AWS_KEY_ENV = "AWS_KEY"
+AWS_SECRET_ENV = "AWS_SECRET"
+AWS_S3_BUCKET_ENV = "AWS_S3_BUCKET"
+TWEETS_AT_ONE_TIME_ENV = "TWEETS_AT_ONE_TIME"
+STORE_FILE_NAME_ENV = "STORE_FILE_NAME"
+
+DEFAULT_STORE_PATH = "~/.twStore"
+DEFAULT_S3_BUCKET = "rsstotwitter"
 
 
 class Config(object):
@@ -22,18 +32,23 @@ class Config(object):
     Purpose of the class is to keep information about configurations
     """
 
-    def __init__(self):
+    def __init__(self, *files):
         self._services = {}
-        self._main = MAIN(15)
+
+        self._main = MAIN(int(os.environ[TWEETS_AT_ONE_TIME_ENV]) if TWEETS_AT_ONE_TIME_ENV in os.environ else 15,
+                          os.environ[STORE_FILE_NAME_ENV] if STORE_FILE_NAME_ENV in os.environ else DEFAULT_STORE_PATH)
+
+        self._aws = AWS_STORAGE(os.environ[AWS_KEY_ENV] if AWS_KEY_ENV in os.environ else None,
+                                os.environ[AWS_SECRET_ENV] if AWS_SECRET_ENV in os.environ else None,
+                                os.environ[AWS_S3_BUCKET_ENV] if AWS_S3_BUCKET_ENV in os.environ else DEFAULT_S3_BUCKET
+                                )
 
         self._twitterApp = TWITTER(os.environ[APP_TWITTER_KEY_ENV] if APP_TWITTER_KEY_ENV in os.environ else None,
                                    os.environ[APP_TWITTER_SECRET_ENV] if APP_TWITTER_SECRET_ENV in os.environ else None,
                                    os.environ[USER_TWITTER_KEY_ENV] if USER_TWITTER_KEY_ENV in os.environ else None,
                                    os.environ[
                                        USER_TWITTER_SECRET_ENV] if USER_TWITTER_SECRET_ENV in os.environ else None)
-        pass
 
-    def open(self, *files):
         config = configparser.ConfigParser()
         for configFile in files:
             log.info("reading config file %s" % configFile)
@@ -47,18 +62,13 @@ class Config(object):
             section_name = util.encode(section)
             log.info("configuring section %s" % section_name)
 
-            if section_name == "MAIN":
-                self._main = MAIN(int(config.get(section, 'num_process_at_one_time'))
-                                  if config.has_option(section,
-                                                       'num_process_at_one_time') else 15)
-            else:
-                service = SERVICE(
-                    section_name,
-                    config.get(section, 'url'),
-                    config.getint(section, "numPosts") if config.has_option(section, "numPosts") else None
-                )
-                self._services[section_name] = service
-                log.debug("Service %s" % (self._services[section_name],))
+            service = SERVICE(
+                section_name,
+                config.get(section, 'url'),
+                config.getint(section, "numPosts") if config.has_option(section, "numPosts") else None
+            )
+            self._services[section_name] = service
+            log.debug("Service %s" % (self._services[section_name],))
 
     def __getitem__(self, section):
         """
@@ -75,20 +85,21 @@ class Config(object):
         """
         return self._services.keys()
 
-    def mainService(self):
+    def globalConfig(self, type):
         """
-        Get the main app config
-        :return:
+        Get the config based on the type
+        type: MAIN, TWITTER, AWS
+        otherwise SystemError will be raised
+        :return: config
         """
-        return self._main
-
-    def appService(self, type):
-        """
-        Given the type of service to return the method will get the service
-        :param type: "TWITTER"
-        :return: namedtuple for particular service
-        """
-        return self._twitterApp
+        if type is "MAIN":
+            return self._main
+        elif type is "TWITTER":
+            return self._twitterApp
+        elif type is "AWS":
+            return self._aws
+        else:
+            raise SystemError("Type %s is not supported" % s)
 
     def _validate(self):
         twitterError = None

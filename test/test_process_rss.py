@@ -1,16 +1,19 @@
 import unittest
 import mock
 import os
+import feed_config
 
 from processRss import process, cleanup_feeds
-from feed_config import SERVICE, TWITTER
-from data_store import FileBasedDataStore, STORE
+from feed_config import SERVICE, TWITTER, AWS_STORAGE, MAIN
+from data_store import STORE
 from test_data_store import TMP_STORE_FILE_PATH
 from collections import namedtuple
 
 
 class TestProcess(unittest.TestCase):
     def setUp(self):
+        os.environ[feed_config.STORE_FILE_NAME_ENV] = TMP_STORE_FILE_PATH
+
         if os.path.exists(TMP_STORE_FILE_PATH):
             os.remove(TMP_STORE_FILE_PATH)
 
@@ -21,13 +24,17 @@ class TestProcess(unittest.TestCase):
     def test_process(self, data_store, mock_config, mock_post, mock_parser):
         service1 = SERVICE("service1", "test1url", 5)
         service2 = SERVICE("service2", "test2url", 1)
+
+        main = MAIN(10, TMP_STORE_FILE_PATH)
+        aws = AWS_STORAGE("awsKey", "awsSecret", "awsBucket")
         twitter = TWITTER("test1AppKey", "test1AppSecret", "test1UserKey", "test1UserSecret")
 
         # when
+        mock_config.return_value.globalConfig.side_effect = [main, twitter, aws]
         mock_config.return_value.mainService.return_value.max_posts = 5
-        mock_config.return_value.appService.return_value = twitter
         mock_config.return_value.services.return_value = ["service1", "service2"]
         mock_config.return_value.__getitem__.side_effect = (service1, service2)
+        mock_config.return_value.globalConfig.return_value = twitter
 
         timeTuple = namedtuple("TimeTuple", "tm_year tm_mon tm_mday tm_hour tm_min tm_sec")
         mock_parser.return_value = {
@@ -53,11 +60,11 @@ class TestProcess(unittest.TestCase):
             (service2, "postA", 1500527415): False
         }
 
-        process(False, TMP_STORE_FILE_PATH, "file1", "file2")
+        process(False, 0, "file1", "file2")
 
         # then
         # test config open is called
-        mock_config.return_value.open.assert_called_once_with('file1', 'file2')
+        mock_config.assert_called_once_with('file1', 'file2')
         # test creating twitter post
         mock_post.assert_called_once_with(twitter, False)
 

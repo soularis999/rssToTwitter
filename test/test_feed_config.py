@@ -12,6 +12,11 @@ class TestConfig(unittest.TestCase):
         os.environ[feed_config.APP_TWITTER_SECRET_ENV] = "test2"
         os.environ[feed_config.USER_TWITTER_KEY_ENV] = "test3"
         os.environ[feed_config.USER_TWITTER_SECRET_ENV] = "test4"
+        os.environ[feed_config.AWS_KEY_ENV] = "test5"
+        os.environ[feed_config.AWS_SECRET_ENV] = "test6"
+        os.environ[feed_config.AWS_S3_BUCKET_ENV] = "test7"
+        os.environ[feed_config.TWEETS_AT_ONE_TIME_ENV] = "10"
+        os.environ[feed_config.STORE_FILE_NAME_ENV] = "test9"
 
     def tearDown(self):
         if feed_config.APP_TWITTER_KEY_ENV in os.environ:
@@ -22,12 +27,19 @@ class TestConfig(unittest.TestCase):
             del os.environ[feed_config.USER_TWITTER_KEY_ENV]
         if feed_config.USER_TWITTER_SECRET_ENV in os.environ:
             del os.environ[feed_config.USER_TWITTER_SECRET_ENV]
+        if feed_config.AWS_KEY_ENV in os.environ:
+            del os.environ[feed_config.AWS_KEY_ENV]
+        if feed_config.AWS_SECRET_ENV in os.environ:
+            del os.environ[feed_config.AWS_SECRET_ENV]
+        if feed_config.AWS_S3_BUCKET_ENV in os.environ:
+            del os.environ[feed_config.AWS_S3_BUCKET_ENV]
+        if feed_config.TWEETS_AT_ONE_TIME_ENV in os.environ:
+            del os.environ[feed_config.TWEETS_AT_ONE_TIME_ENV]
+        if feed_config.STORE_FILE_NAME_ENV in os.environ:
+            del os.environ[feed_config.STORE_FILE_NAME_ENV]
 
     def test_fileparse(self):
-        config = feed_config.Config()
-
-        # when
-        config.open(os.path.expanduser('testConfig.cfg'))
+        config = feed_config.Config(os.path.expanduser('testConfig.cfg'))
 
         # then
         self.assertEqual(config['netflix'].url, 'https://medium.com/feed/netflix')
@@ -40,18 +52,21 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(['NETFLIX'], config.services())
 
     def test_multipleFiles(self):
-        config = feed_config.Config()
-
         # when
-        config.open(os.path.expanduser('testConfig.cfg'), os.path.expanduser('testConfig2.cfg'))
+        config = feed_config.Config(os.path.expanduser('testConfig.cfg'), os.path.expanduser('testConfig2.cfg'))
 
         # then
-        self.assertEqual(config.mainService().numToProcessAtOneTime, 10)
+        self.assertEqual(config.globalConfig("MAIN").numToProcessAtOneTime, 10)
+        self.assertEqual(config.globalConfig("MAIN").storeFileName, "test9")
 
-        self.assertEqual(config.appService("TWITTER").appTwitterKey, 'test1')
-        self.assertEqual(config.appService("TWITTER").appTwitterSecret, 'test2')
-        self.assertEqual(config.appService("TWITTER").userTwitterKey, 'test3')
-        self.assertEqual(config.appService("TWITTER").userTwitterSecret, 'test4')
+        self.assertEqual(config.globalConfig("TWITTER").appTwitterKey, 'test1')
+        self.assertEqual(config.globalConfig("TWITTER").appTwitterSecret, 'test2')
+        self.assertEqual(config.globalConfig("TWITTER").userTwitterKey, 'test3')
+        self.assertEqual(config.globalConfig("TWITTER").userTwitterSecret, 'test4')
+
+        self.assertEqual(config.globalConfig("AWS").awsAccessKey, 'test5')
+        self.assertEqual(config.globalConfig("AWS").awsAccessSecret, 'test6')
+        self.assertEqual(config.globalConfig("AWS").awsBucket, 'test7')
 
         self.assertEqual(config['LINKEDIN'].serviceName, 'LINKEDIN')
         self.assertEqual(config['LINKEDIN'].url, 'https://engineering.linkedin.com/blog.rss')
@@ -71,8 +86,7 @@ class TestConfig(unittest.TestCase):
             del os.environ[feed_config.APP_TWITTER_SECRET_ENV]
             del os.environ[feed_config.USER_TWITTER_KEY_ENV]
             del os.environ[feed_config.USER_TWITTER_SECRET_ENV]
-            config = feed_config.Config()
-            config.open('./testConfig.cfg', './testConfig2.cfg')
+            feed_config.Config('./testConfig.cfg', './testConfig2.cfg')
 
         self.assertEqual(e.exception.message,
                          "Twitter app was not configured (app key,app secret,user key,user secret). "

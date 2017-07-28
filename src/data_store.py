@@ -48,9 +48,9 @@ class DataStore(object):
 
 
 class FileBasedDataStore(DataStore):
-    def __init__(self, dry_run=False, store_path="~/.twStore"):
+    def __init__(self, config, dry_run=False):
         DataStore.__init__(self, dry_run)
-        self._store_path = store_path
+        self._config = config
         self._read_store()
 
     def _read_store(self):
@@ -59,7 +59,7 @@ class FileBasedDataStore(DataStore):
         :return dict of store objects indexed by service name
         """
         self._stores = {}
-        f_path = os.path.expanduser(self._store_path)
+        f_path = os.path.expanduser(self._config.storeFileName)
         log.info("reading store %s" % f_path)
 
         if not os.path.exists(f_path):
@@ -87,7 +87,7 @@ class FileBasedDataStore(DataStore):
         :param result_text the list item that will be populated with text writen to file
         :return: number of items written
         """
-        f_path = os.path.expanduser(self._store_path)
+        f_path = os.path.expanduser(self._config.storeFileName)
         log.info("writing store %s" % f_path)
 
         result_text = [] if result_text is None else result_text
@@ -106,3 +106,29 @@ class FileBasedDataStore(DataStore):
 
         log.info("Saved %i records" % len(result_text))
         return len(result_text)
+
+
+class S3BasedDataStore(FileBasedDataStore):
+    def __init__(self, config, aws_config, dry_run=False):
+        import boto
+        self._connection = boto.connect_s3(aws_access_key_id=aws_config.awsAccessKey,
+                                           aws_secret_access_key=aws_config.awsAccessSecret)
+
+        self._copy_from_s3(aws_config.awsBucket, config.storeFileName)
+
+        FileBasedDataStore.__init__(self, config, dry_run=dry_run)
+
+    def _copy_from_s3(self, s3_bucket, store_path):
+
+        file_name = os.path.basename(store_path)
+        bucket = self._connection.get_bucket(s3_bucket)
+        if file_name not in bucket:
+            self._key = bucket.create_key(file_name)
+        else:
+            self._key = bucket[file_name]
+
+        self._key.get_contents_to_filename(file_name)
+
+    def write_store(self, result_text=None):
+        super(S3BasedDataStore, self).write_store(result_text=result_text)
+        self._key.set_contents_from_filename(self._read_store())
