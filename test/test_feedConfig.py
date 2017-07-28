@@ -13,6 +13,21 @@ class TestConfig(unittest.TestCase):
         if (os.path.exists(TMP_STORE_FILE_PATH)):
             os.remove(TMP_STORE_FILE_PATH)
 
+        os.environ[feedConfig.APP_TWITTER_KEY_ENV] = "test1"
+        os.environ[feedConfig.APP_TWITTER_SECRET_ENV] = "test2"
+        os.environ[feedConfig.USER_TWITTER_KEY_ENV] = "test3"
+        os.environ[feedConfig.USER_TWITTER_SECRET_ENV] = "test4"
+
+    def tearDown(self):
+        if feedConfig.APP_TWITTER_KEY_ENV in os.environ:
+            del os.environ[feedConfig.APP_TWITTER_KEY_ENV]
+        if feedConfig.APP_TWITTER_SECRET_ENV in os.environ:
+            del os.environ[feedConfig.APP_TWITTER_SECRET_ENV]
+        if feedConfig.USER_TWITTER_KEY_ENV in os.environ:
+            del os.environ[feedConfig.USER_TWITTER_KEY_ENV]
+        if feedConfig.USER_TWITTER_SECRET_ENV in os.environ:
+            del os.environ[feedConfig.USER_TWITTER_SECRET_ENV]
+
     def test_fileparse(self):
         config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
 
@@ -37,10 +52,11 @@ class TestConfig(unittest.TestCase):
 
         # then
         self.assertEqual(config.mainService().numToProcessAtOneTime, 10)
-        self.assertEqual(config.mainService().appTwitterKey, 'test1')
-        self.assertEqual(config.mainService().appTwitterSecret, 'test2')
-        self.assertEqual(config.mainService().userTwitterKey, 'test3')
-        self.assertEqual(config.mainService().userTwitterSecret, 'test4')
+
+        self.assertEqual(config.appService("TWITTER").appTwitterKey, 'test1')
+        self.assertEqual(config.appService("TWITTER").appTwitterSecret, 'test2')
+        self.assertEqual(config.appService("TWITTER").userTwitterKey, 'test3')
+        self.assertEqual(config.appService("TWITTER").userTwitterSecret, 'test4')
 
         self.assertEqual(config['LINKEDIN'].serviceName, 'LINKEDIN')
         self.assertEqual(config['LINKEDIN'].url, 'https://engineering.linkedin.com/blog.rss')
@@ -78,7 +94,6 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(file(TMP_STORE_FILE_PATH).readlines(),
                          ['NETFLIX|testid1|2348233\n', 'YAHOO|testid22223423|2394230\n'])
 
-
     def test_writing(self):
         config = feedConfig.Config(store_path=TMP_STORE_FILE_PATH)
         config["T1"] = feedConfig.SERVICE("T1", "url1", 1, None)
@@ -86,7 +101,7 @@ class TestConfig(unittest.TestCase):
         config["T3"] = feedConfig.SERVICE("T3", "url3", 3, feedConfig.STORE("T3", None, 5555545))
         config["T4"] = feedConfig.SERVICE("T4", "url4", 4, feedConfig.STORE("T4", "id4", 444555666))
         config["T5"] = feedConfig.SERVICE("T5", "url5", 5, feedConfig.STORE("T5", "id5", 555666777))
-        config._main = feedConfig.MAIN(10, None, None, None, None)
+        config._main = feedConfig.MAIN(10)
 
         # when
         config.writeStore()
@@ -126,6 +141,20 @@ class TestConfig(unittest.TestCase):
 
         # then
         self.assertFalse(os.path.exists(TMP_STORE_FILE_PATH))
+
+    def test_validation(self):
+        # when
+        with self.assertRaises(SystemError) as e:
+            del os.environ[feedConfig.APP_TWITTER_KEY_ENV]
+            del os.environ[feedConfig.APP_TWITTER_SECRET_ENV]
+            del os.environ[feedConfig.USER_TWITTER_KEY_ENV]
+            del os.environ[feedConfig.USER_TWITTER_SECRET_ENV]
+            config = feedConfig.Config()
+            config.open('./testConfig.cfg', './testConfig2.cfg')
+
+        self.assertEqual(e.exception.message,
+                         "Twitter app was not configured (app key,app secret,user key,user secret). "
+                         "Did you setup the env variables as defined in README?")
 
 
 if __name__ == "__main__":

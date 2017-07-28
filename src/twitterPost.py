@@ -13,27 +13,26 @@ class TwitterPost(object):
     In theory you can post with different users but through same application
     """
 
-    def __init__(self, appKey, appSecret, dryRun=False):
+    def __init__(self, twitter_config, dryRun=False):
         """
         The constructor is taking two params, the application key and secret
-        :param appKey: string key value of the applications that will be posting the tweet
-        :param appSecret: the secret of the application that will be posting the tweet
+        :param twitter_config: as described  by namedtuple in feedConfig.TWITTER
         :param dryRun: the flag can be set to just log the messages instead of publishing them to twitter
         """
-        self._consumer = oauth2.Consumer(appKey, appSecret)
+        self._consumer = oauth2.Consumer(twitter_config.appTwitterKey, twitter_config.appTwitterSecret)
+        self._twitter_config = twitter_config
         self._paramsToSend = {"status": None}
         self._dryRun = dryRun
         self._posts = []
 
-    def post(self, userKey, userSecret):
+    def post(self):
         """
-        Given the user key, secret the method attempts to post all the currently stored items on Twitter.
-        :param userKey: user key for this application
-        :param userSecret: user secret for ths application
+        method attempts to post all the currently stored items on Twitter using the authentication credentials provided
+                in constructor param - twitter_config.
         :return Returns back a tuple of (id, and boolean if post was successful or not)
         """
         # your application key and val
-        tok = oauth2.Token(userKey, userSecret)
+        tok = oauth2.Token(self._twitter_config.userTwitterKey, self._twitter_config.userTwitterSecret)
         client = oauth2.Client(self._consumer, tok)
 
         results = {}
@@ -41,7 +40,7 @@ class TwitterPost(object):
             self._paramsToSend["status"] = post[1]
             query = urllib.urlencode(self._paramsToSend)
 
-            log.debug("Posting: %s -> %s%s" % (userKey, TWITTER_STATUS_POST_URL, query))
+            log.debug("Posting: %s%s" % (TWITTER_STATUS_POST_URL, query))
             result = True
             if not self._dryRun:
                 (resp, content) = client.request(TWITTER_STATUS_POST_URL + query, method="POST")

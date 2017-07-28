@@ -8,8 +8,13 @@ log = logging.getLogger(__name__)
 
 SERVICE = namedtuple("Service", "serviceName url numPosts store")
 STORE = namedtuple("Store", "serviceName lastProcessedId lastProcessedUpdateTimestamp")
-MAIN = namedtuple("Main",
-                  "numToProcessAtOneTime appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+MAIN = namedtuple("Main", "numToProcessAtOneTime")
+TWITTER = namedtuple("TwitterApp", "appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+
+APP_TWITTER_KEY_ENV = "APP_TWITTER_KEY"
+APP_TWITTER_SECRET_ENV = "APP_TWITTER_SECRET"
+USER_TWITTER_KEY_ENV = "USER_TWITTER_KEY"
+USER_TWITTER_SECRET_ENV = "USER_TWITTER_SECRET"
 
 
 class Config(object):
@@ -20,9 +25,15 @@ class Config(object):
     def __init__(self, dry_run=False, store_path="~/.twStore"):
         self._services = {}
         self._store = {}
-        self._main = None
+        self._main = MAIN(15)
         self._dry_run = dry_run
         self._store_path = store_path
+
+        self._twitterApp = TWITTER(os.environ[APP_TWITTER_KEY_ENV] if APP_TWITTER_KEY_ENV in os.environ else None,
+                                   os.environ[APP_TWITTER_SECRET_ENV] if APP_TWITTER_SECRET_ENV in os.environ else None,
+                                   os.environ[USER_TWITTER_KEY_ENV] if USER_TWITTER_KEY_ENV in os.environ else None,
+                                   os.environ[
+                                       USER_TWITTER_SECRET_ENV] if USER_TWITTER_SECRET_ENV in os.environ else None)
         pass
 
     def open(self, *files):
@@ -41,13 +52,9 @@ class Config(object):
             log.info("configuring section %s" % section_name)
 
             if section_name == "MAIN":
-                self._main = MAIN(
-                    int(config.get(section, 'num_process_at_one_time')) if config.has_option(section,
-                                                                                             'num_process_at_one_time') else 15,
-                    config.get(section, 'application_twitter_key'),
-                    config.get(section, 'application_twitter_secret'),
-                    config.get(section, 'user_twitter_key'),
-                    config.get(section, 'user_twitter_secret'))
+                self._main = MAIN(int(config.get(section, 'num_process_at_one_time'))
+                                  if config.has_option(section,
+                                                       'num_process_at_one_time') else 15)
             else:
                 service = SERVICE(
                     section_name,
@@ -82,7 +89,19 @@ class Config(object):
         return self._services.keys()
 
     def mainService(self):
+        """
+        Get the main app config
+        :return:
+        """
         return self._main
+
+    def appService(self, type):
+        """
+        Given the type of service to return the method will get the service
+        :param type: "TWITTER"
+        :return: namedtuple for particular service
+        """
+        return self._twitterApp
 
     def _readStore(self):
         """
@@ -157,8 +176,22 @@ class Config(object):
         log.info("Saved %i records" % count)
 
     def _validate(self):
-        if not self._main:
-            raise SystemError("Main config was not populated")
+        twitterError = None
+        if not self._twitterApp.appTwitterKey:
+            twitterError = "app key"
+
+        if not self._twitterApp.appTwitterSecret:
+            twitterError = (twitterError + "," if twitterError else "") + "app secret"
+
+        if not self._twitterApp.userTwitterKey:
+            twitterError = (twitterError + "," if twitterError else "") + "user key"
+
+        if not self._twitterApp.userTwitterSecret:
+            twitterError = (twitterError + "," if twitterError else "") + "user secret"
+
+        if twitterError:
+            raise SystemError(
+                "Twitter app was not configured (%s). Did you setup the env variables as defined in README?" % twitterError)
 
     @staticmethod
     def _encode(section):

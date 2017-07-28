@@ -4,6 +4,8 @@ import mock
 import unittest
 import twitterPost
 
+from feedConfig import TWITTER
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -14,9 +16,9 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet")
-        results = post.post("userKey", "userSecret")
+        results = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -32,12 +34,15 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret", False)
-        post.prepare("1", "tweet this please very very very long string of 150 characters and longer and longer and longer and longer and longer and longer and longer and logner", "test123")
-        results = post.post("userKey", "userSecret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), False)
+        post.prepare("1",
+                     "tweet this please very very very long string of 150 characters and longer and longer and longer and longer and longer and longer and longer and logner",
+                     "test123")
+        results = post.post()
 
         # then
-        query = "tweet this please very very very long string of 150 characters and longer and longer and longer and longer... test123".replace(' ','+')
+        query = "tweet this please very very very long string of 150 characters and longer and longer and longer and longer... test123".replace(
+            ' ', '+')
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
         mock_oauth2.Token.assert_called_once_with("userKey", "userSecret")
         mock_oauth2.Client.return_value.request.assert_called_once_with(
@@ -51,11 +56,11 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet 1")
-        results1 = post.post("userKey", "userSecret")
+        results1 = post.post()
         post.prepare("2", "tweet 2")
-        results2 = post.post("userKey", "userSecret")
+        results2 = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -74,9 +79,9 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
-        results = post.post("userKey", "userSecret")
+        results = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -92,11 +97,11 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
-        results = post.post("userKey", "userSecret")
+        results = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -112,11 +117,11 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.return_value = ({"status": "200"}, {})
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
-        results = post.post("userKey", "userSecret")
+        results = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -139,11 +144,11 @@ class TestTwitterPost(unittest.TestCase):
         mock_oauth2.Client().request.side_effect = effect
 
         # when
-        post = twitterPost.TwitterPost("key", "secret")
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"))
         post.prepare("1", "tweet this please")
         post.prepare("2", "tweet that please")
         post.prepare("3", "tweet one more please")
-        results = post.post("userKey", "userSecret")
+        results = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -158,9 +163,9 @@ class TestTwitterPost(unittest.TestCase):
     @mock.patch("twitterPost.oauth2")
     def test_dry_run(self, mock_oauth2):
         # when
-        post = twitterPost.TwitterPost("key", "secret", True)
+        post = twitterPost.TwitterPost(TWITTER("key", "secret", "userKey", "userSecret"), True)
         post.prepare("1", "tweet this please")
-        result = post.post("userKey", "userSecret")
+        result = post.post()
 
         # then
         mock_oauth2.Consumer.assert_called_once_with('key', 'secret')
@@ -169,8 +174,5 @@ class TestTwitterPost(unittest.TestCase):
         self.assertEqual(result, {"1": True})
 
 
-
-
 if __name__ == "__main__":
     unittest.main(TestTwitterPost)
-

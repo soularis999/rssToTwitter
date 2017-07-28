@@ -3,7 +3,7 @@ import mock
 import os
 
 from processRss import process, cleanup_feeds
-from feedConfig import SERVICE, STORE
+from feedConfig import SERVICE, STORE, TWITTER
 from test_feedConfig import TMP_STORE_FILE_PATH
 from collections import namedtuple
 
@@ -19,13 +19,11 @@ class TestProcess(unittest.TestCase):
     def test_process(self, mock_config, mock_post, mock_parser):
         service1 = SERVICE("service1", "test1url", 5, None)
         service2 = SERVICE("service2", "test2url", 1, None)
+        twitter = TWITTER("test1AppKey", "test1AppSecret", "test1UserKey", "test1UserSecret")
 
         # when
         mock_config.return_value.mainService.return_value.max_posts = 5
-        mock_config.return_value.mainService.return_value.appTwitterKey = "test1AppKey"
-        mock_config.return_value.mainService.return_value.appTwitterSecret = "test1AppSecret"
-        mock_config.return_value.mainService.return_value.userTwitterKey = "test1UserKey"
-        mock_config.return_value.mainService.return_value.userTwitterSecret = "test1UserSecret"
+        mock_config.return_value.appService.return_value = twitter
         mock_config.return_value.services.return_value = ["service1", "service2"]
         mock_config.return_value.__getitem__.side_effect = (service1, service2)
 
@@ -59,7 +57,7 @@ class TestProcess(unittest.TestCase):
         # test config open is called
         mock_config.return_value.open.assert_called_once_with('file1', 'file2')
         # test creating twitter post
-        mock_post.assert_called_once_with("test1AppKey", "test1AppSecret", False)
+        mock_post.assert_called_once_with(twitter, False)
 
         # test get is called
 
@@ -73,7 +71,7 @@ class TestProcess(unittest.TestCase):
                              mock.call((service1, "postB", 1494880615), 'post 1 title', 'httpd://test1.com'),
                              mock.call((service1, "postA", 1500527415), 'post 2 title', 'httpd://test2.com'),
                              mock.call((service2, "postA", 1500527415), 'post 2 title', 'httpd://test2.com')])
-        mock_post.return_value.post.assert_called_once_with('test1UserKey', 'test1UserSecret')
+        mock_post.return_value.post.assert_called_once_with()
         # test store is called to save data
         self.assertEquals(mock_config.return_value.__setitem__.call_args_list,
                           [mock.call('service1',

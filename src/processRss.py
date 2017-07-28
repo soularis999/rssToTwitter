@@ -90,7 +90,7 @@ def process(dryRun=False, storeFile='~/.twStore', *files):
     config = Config(dryRun, storeFile)
     config.open(*files)
 
-    tp = TwitterPost(config.mainService().appTwitterKey, config.mainService().appTwitterSecret, dryRun)
+    tp = TwitterPost(config.appService("TWITTER"), dryRun)
     num_items = 0
     for service in config.services():
         conf_data = config[service]
@@ -114,7 +114,7 @@ def process(dryRun=False, storeFile='~/.twStore', *files):
     log.info("Processed %i items " % num_items)
 
     # get results dict indexed by (service id / post id) key
-    results = tp.post(config.mainService().userTwitterKey, config.mainService().userTwitterSecret)
+    results = tp.post()
 
     filtered_services = {}
     for key in sorted(results.keys(), key=lambda key: key[2], reverse=True):
@@ -132,12 +132,13 @@ def process(dryRun=False, storeFile='~/.twStore', *files):
 
 
 def usage():
-    print """Usage: processRss -c <config files> -d
+    print """Usage: processRss -d -s ~/.twStore <config files>
              Where:
-             -c | -- config : comma delimited list of the config files
              -d | --dryrun: do not publish to twitter - just get data and update the store
              -s | --store: the location of store file - defaults to ~/.twStore
              -h | --help: help
+             
+             <config files> - the list of config files to use
              """
 
 
@@ -151,7 +152,6 @@ def main():
         sys.exit(2)
 
     isDryRun = False
-    conFileList = []
     storeFile = '~/.twStore'
     for option, var in opts:
         if option in ("-h", "--help"):
@@ -159,12 +159,10 @@ def main():
             sys.exit()
         elif option in ("-d", "--dryrun"):
             isDryRun = True
-        elif option in ("-c", "--config"):
-            conFileList = var.split(",")
         elif option in ("-s", "--store"):
             storeFile = var
 
-    process(isDryRun, storeFile, *conFileList)
+    process(isDryRun, storeFile, *args)
 
 
 if __name__ == "__main__":
