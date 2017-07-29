@@ -34,7 +34,8 @@ class DataStore(object):
         :param section: section to search
         :return: values
         """
-        return self._stores[util.encode(section)]
+        section = util.encode(section)
+        return self._stores[section] if section in self._stores else None
 
     def __len__(self):
         """
@@ -110,25 +111,21 @@ class FileBasedDataStore(DataStore):
 
 class S3BasedDataStore(FileBasedDataStore):
     def __init__(self, config, aws_config, dry_run=False):
-        import boto
-        self._connection = boto.connect_s3(aws_access_key_id=aws_config.awsAccessKey,
+        from boto import connect_s3
+        self._connection = connect_s3(aws_access_key_id=aws_config.awsAccessKey,
                                            aws_secret_access_key=aws_config.awsAccessSecret)
 
-        self._copy_from_s3(aws_config.awsBucket, config.storeFileName)
+        file_name = os.path.basename(config.storeFileName)
+        bucket = self._connection.get_bucket(aws_config.awsBucket)
+        self._key = bucket.get_key(file_name)
+        if not self._key:
+            self._key = bucket.new_key(file_name)
+            self._key.set_contents_from_string("")
+
+        self._key.get_contents_to_filename(config.storeFileName)
 
         FileBasedDataStore.__init__(self, config, dry_run=dry_run)
 
-    def _copy_from_s3(self, s3_bucket, store_path):
-
-        file_name = os.path.basename(store_path)
-        bucket = self._connection.get_bucket(s3_bucket)
-        if file_name not in bucket:
-            self._key = bucket.create_key(file_name)
-        else:
-            self._key = bucket[file_name]
-
-        self._key.get_contents_to_filename(file_name)
-
     def write_store(self, result_text=None):
         super(S3BasedDataStore, self).write_store(result_text=result_text)
-        self._key.set_contents_from_filename(self._read_store())
+        self._key.set_contents_from_filename(self._config.storeFileName)

@@ -92,13 +92,15 @@ def process(dry_run=False, store_type=0, *files):
     twitter = config.globalConfig("TWITTER")
     aws = config.globalConfig("AWS")
 
-    store = FileBasedDataStore(dry_run, mainConfig) if 0 == store_type else S3BasedDataStore(dry_run, mainConfig, aws)
+    store = FileBasedDataStore(mainConfig, dry_run) if 0 == store_type else S3BasedDataStore(mainConfig, aws, dry_run)
     tp = TwitterPost(twitter, dry_run)
 
     num_items = 0
     for service in config.services():
         conf_data = config[service]
         store_record = store[service]
+        log.info("Processing service %s -> %s" % (service, conf_data))
+
         feeds = parse(conf_data.url)
         if 'status' not in feeds or feeds['status'] is not 200:
             log.error("Error getting feeds %s -> %s" % (conf_data.url, feeds))
@@ -113,8 +115,6 @@ def process(dry_run=False, store_type=0, *files):
 
         if num_items >= mainConfig.numToProcessAtOneTime:
             break
-
-        log.info("Processed service %s " % service)
 
     log.info("Processed %i items " % num_items)
 
@@ -165,7 +165,7 @@ def main():
         elif option in ("-d", "--dryrun"):
             isDryRun = True
         elif option in ("-t", "--type"):
-            store_type = 1
+            store_type = int(var)
         elif option in ("-v", "--verbose"):
             logLevel = logging.DEBUG
 

@@ -80,8 +80,13 @@ class TestDataStore(unittest.TestCase):
 
     @mock.patch("boto.connect_s3")
     def test_s3_store(self, boto):
+        connection_mock = mock.MagicMock()
+        bucket_mock = mock.MagicMock()
         key_mock = mock.MagicMock()
-        boto.return_value.get_bucket.return_value = {"twStore":key_mock}
+        boto.return_value = connection_mock
+        connection_mock.get_bucket.return_value = bucket_mock
+        bucket_mock.get_key.return_value = None
+        bucket_mock.new_key.return_value = key_mock
 
         config = S3BasedDataStore(MAIN(15, TMP_STORE_FILE_PATH), AWS_STORAGE("awskey", "awssecret", "awsbucket"))
 
@@ -98,9 +103,13 @@ class TestDataStore(unittest.TestCase):
         config.write_store()
 
         # then
-        self.assertEqual(boto.call_args, mock.call(aws_access_key_id='awskey', aws_secret_access_key='awssecret'))
-        self.assertEqual(boto.return_value.get_bucket.call_args, mock.call("awsbucket"))
-        self.assertEqual(key_mock.get_contents_to_filename.call_args, mock.call("twStore"))
+        self.assertEqual(boto.call_args,
+                         mock.call(aws_access_key_id='awskey', aws_secret_access_key='awssecret'))
+        self.assertEqual(connection_mock.get_bucket.call_args, mock.call("awsbucket"))
+        self.assertEqual(bucket_mock.get_key.call_args, mock.call("twStore"))
+        self.assertEqual(bucket_mock.new_key.call_args, mock.call("twStore"))
+        self.assertEqual(key_mock.set_contents_from_string.call_args, mock.call(""))
+        self.assertEqual(key_mock.get_contents_to_filename.call_args, mock.call("/tmp/twStore"))
 
         self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
         self.assertEqual(sorted(file(TMP_STORE_FILE_PATH).readlines()),

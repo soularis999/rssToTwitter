@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 MAIN = namedtuple("Main", "numToProcessAtOneTime storeFileName")
 SERVICE = namedtuple("Service", "serviceName url numPosts")
 AWS_STORAGE = namedtuple("AWS", "awsAccessKey awsAccessSecret awsBucket")
-FILE_STORAGE = namedtuple("File", "store")
 TWITTER = namedtuple("TwitterApp", "appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
 
 APP_TWITTER_KEY_ENV = "APP_TWITTER_KEY"
@@ -36,7 +35,9 @@ class Config(object):
         self._services = {}
 
         self._main = MAIN(int(os.environ[TWEETS_AT_ONE_TIME_ENV]) if TWEETS_AT_ONE_TIME_ENV in os.environ else 15,
-                          os.environ[STORE_FILE_NAME_ENV] if STORE_FILE_NAME_ENV in os.environ else DEFAULT_STORE_PATH)
+                          os.path.expanduser(
+                              os.environ[
+                                  STORE_FILE_NAME_ENV] if STORE_FILE_NAME_ENV in os.environ else DEFAULT_STORE_PATH))
 
         self._aws = AWS_STORAGE(os.environ[AWS_KEY_ENV] if AWS_KEY_ENV in os.environ else None,
                                 os.environ[AWS_SECRET_ENV] if AWS_SECRET_ENV in os.environ else None,
