@@ -78,15 +78,15 @@ class TestDataStore(unittest.TestCase):
         # then
         self.assertFalse(os.path.exists(TMP_STORE_FILE_PATH))
 
-    @mock.patch("boto.connect_s3")
-    def test_s3_store(self, boto):
-        connection_mock = mock.MagicMock()
+    @mock.patch("boto3.resource")
+    def test_s3_store(self, mock_boto):
+        #        self._connection = boto3.resource('s3', aws_access_key_id=aws_config.awsAccessKey,
+        #                                   aws_secret_access_key=aws_config.awsAccessSecret)
+        # self._connection.Bucket(aws_config.awsBucket).download_file(file_name, config.storeFileName)
+        resource_mock = mock.MagicMock()
         bucket_mock = mock.MagicMock()
-        key_mock = mock.MagicMock()
-        boto.return_value = connection_mock
-        connection_mock.get_bucket.return_value = bucket_mock
-        bucket_mock.get_key.return_value = None
-        bucket_mock.new_key.return_value = key_mock
+        mock_boto.return_value = resource_mock
+        resource_mock.Bucket.return_value = bucket_mock
 
         config = S3BasedDataStore(MAIN(15, TMP_STORE_FILE_PATH), AWS_STORAGE("awskey", "awssecret", "awsbucket"))
 
@@ -103,13 +103,11 @@ class TestDataStore(unittest.TestCase):
         config.write_store()
 
         # then
-        self.assertEqual(boto.call_args,
-                         mock.call(aws_access_key_id='awskey', aws_secret_access_key='awssecret'))
-        self.assertEqual(connection_mock.get_bucket.call_args, mock.call("awsbucket"))
-        self.assertEqual(bucket_mock.get_key.call_args, mock.call("twStore"))
-        self.assertEqual(bucket_mock.new_key.call_args, mock.call("twStore"))
-        self.assertEqual(key_mock.set_contents_from_string.call_args, mock.call(""))
-        self.assertEqual(key_mock.get_contents_to_filename.call_args, mock.call("/tmp/twStore"))
+        self.assertEqual(mock_boto.call_args,
+                         mock.call('s3', aws_access_key_id='awskey', aws_secret_access_key='awssecret'))
+        self.assertEqual(resource_mock.Bucket.call_args, mock.call("awsbucket"))
+        self.assertEqual(bucket_mock.download_file.call_args, mock.call("twStore", "/tmp/twStore"))
+        self.assertEqual(bucket_mock.upload_file.call_args, mock.call("/tmp/twStore", "twStore"))
 
         self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
         self.assertEqual(sorted(file(TMP_STORE_FILE_PATH).readlines()),

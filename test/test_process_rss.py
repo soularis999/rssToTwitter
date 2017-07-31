@@ -3,7 +3,7 @@ import mock
 import os
 import feed_config
 
-from processRss import process, cleanup_feeds
+from process_rss import process, cleanup_feeds
 from feed_config import SERVICE, TWITTER, AWS_STORAGE, MAIN
 from data_store import STORE
 from test_data_store import TMP_STORE_FILE_PATH
@@ -17,10 +17,10 @@ class TestProcess(unittest.TestCase):
         if os.path.exists(TMP_STORE_FILE_PATH):
             os.remove(TMP_STORE_FILE_PATH)
 
-    @mock.patch("processRss.parse")
-    @mock.patch("processRss.TwitterPost")
-    @mock.patch("processRss.Config")
-    @mock.patch("processRss.FileBasedDataStore")
+    @mock.patch("process_rss.parse")
+    @mock.patch("process_rss.TwitterPost")
+    @mock.patch("process_rss.Config")
+    @mock.patch("process_rss.FileBasedDataStore")
     def test_process(self, data_store, mock_config, mock_post, mock_parser):
         service1 = SERVICE("service1", "test1url", 5)
         service2 = SERVICE("service2", "test2url", 1)

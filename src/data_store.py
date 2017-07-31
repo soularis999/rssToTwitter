@@ -91,41 +91,44 @@ class FileBasedDataStore(DataStore):
         f_path = os.path.expanduser(self._config.storeFileName)
         log.info("writing store %s" % f_path)
 
-        result_text = [] if result_text is None else result_text
+        def write(service_name, store):
+            post_id = store.lastProcessedId if store.lastProcessedId else ''
+            time = '%i' % store.lastProcessedUpdateTimestamp if store.lastProcessedUpdateTimestamp else ''
+            text = '%s|%s|%s\n' % (service_name, post_id, time)
+            return text
+
+        # write everything in store
+        results = map(lambda sname: write(sname, self._stores[sname]), self._stores.keys())
         if not self._dry_run:
             with file(f_path, 'w') as f:
-                def write(service_name, store, file):
-                    post_id = store.lastProcessedId if store.lastProcessedId else ''
-                    time = '%i' % store.lastProcessedUpdateTimestamp if store.lastProcessedUpdateTimestamp else ''
-                    text = '%s|%s|%s\n' % (service_name, post_id, time)
-                    file.write(text)
+                f.writelines(results)
 
-                    return text
-
-                # write everything in store
-                result_text = map(lambda sname: write(sname, self._stores[sname], f), self._stores.keys())
-
-        log.info("Saved %i records" % len(result_text))
-        return len(result_text)
+        log.info("Saved %i records" % len(results))
+        if result_text is not None:
+            result_text.append(results)
+        return len(results)
 
 
 class S3BasedDataStore(FileBasedDataStore):
     def __init__(self, config, aws_config, dry_run=False):
-        from boto import connect_s3
-        self._connection = connect_s3(aws_access_key_id=aws_config.awsAccessKey,
-                                           aws_secret_access_key=aws_config.awsAccessSecret)
+        self._aws_config = aws_config
+        self._aws_file_name = os.path.basename(config.storeFileName)
 
-        file_name = os.path.basename(config.storeFileName)
-        bucket = self._connection.get_bucket(aws_config.awsBucket)
-        self._key = bucket.get_key(file_name)
-        if not self._key:
-            self._key = bucket.new_key(file_name)
-            self._key.set_contents_from_string("")
+        from boto3 import resource
 
-        self._key.get_contents_to_filename(config.storeFileName)
+        self._connection = resource('s3') \
+            if not aws_config.awsAccessKey or not aws_config.awsAccessSecret \
+            else resource('s3', aws_access_key_id=aws_config.awsAccessKey,
+                          aws_secret_access_key=aws_config.awsAccessSecret)
+        log.debug("s3 connection opened")
+
+        self._connection.Bucket(aws_config.awsBucket).download_file(self._aws_file_name, config.storeFileName)
+        log.debug("%s file copied from s3" % config.storeFileName)
 
         FileBasedDataStore.__init__(self, config, dry_run=dry_run)
 
     def write_store(self, result_text=None):
         super(S3BasedDataStore, self).write_store(result_text=result_text)
-        self._key.set_contents_from_filename(self._config.storeFileName)
+        if not self._dry_run:
+            self._connection.Bucket(self._aws_config.awsBucket).upload_file(self._config.storeFileName,
+                                                                            self._aws_file_name)

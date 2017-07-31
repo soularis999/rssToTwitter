@@ -80,7 +80,7 @@ def process_posts(conf_data, post, tp):
     return tp.prepare(key, title, url)
 
 
-def process(dry_run=False, store_type=0, *files):
+def process(dry_run=False, is_aws=False, *files):
     """
     Given the config files the method coordinates the retrieval of the data and publishing it to twitter
     :param dry_run: is this a test run - in this case data will be read but not published to twitter and store will not
@@ -92,7 +92,7 @@ def process(dry_run=False, store_type=0, *files):
     twitter = config.globalConfig("TWITTER")
     aws = config.globalConfig("AWS")
 
-    store = FileBasedDataStore(mainConfig, dry_run) if 0 == store_type else S3BasedDataStore(mainConfig, aws, dry_run)
+    store = S3BasedDataStore(mainConfig, aws, dry_run) if is_aws else FileBasedDataStore(mainConfig, dry_run)
     tp = TwitterPost(twitter, dry_run)
 
     num_items = 0
@@ -132,12 +132,15 @@ def process(dry_run=False, store_type=0, *files):
         store[conf_data.serviceName] = STORE(conf_data.serviceName, item[1], item[2])
 
     # in the end - write the store
-    store.write_store()
+    data = []
+    store.write_store(data)
+    return data
 
 
 def usage():
     print """Usage: processRss -d <config files>
              Where:
+             -a | --aws [Optional] - if set the AWS S3 storage will be used
              -d | --dryrun: do not publish to twitter - just get data and update the store
              -v | --verbose: the verbose output
              -h | --help: help
@@ -146,32 +149,30 @@ def usage():
              """
 
 
-def main():
+def main(params):
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dht:v", ["dryRun", "help", "type", "verbose"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print str(err)  # will print something like "option -a not recognized"
+        opts, args = getopt.getopt(params, "adh:v", ["aws", "dryRun", "help", "verbose"])
+    except getopt.GetoptError:
         usage()
         sys.exit(2)
 
     isDryRun = False
     logLevel = logging.INFO
-    store_type = 0
+    is_aws = False
     for option, var in opts:
-        if option in ("-h", "--help"):
+        if option in ("-a", "--aws"):
+            is_aws = True
+        elif option in ("-h", "--help"):
             usage()
             sys.exit()
         elif option in ("-d", "--dryrun"):
             isDryRun = True
-        elif option in ("-t", "--type"):
-            store_type = int(var)
         elif option in ("-v", "--verbose"):
             logLevel = logging.DEBUG
 
     logging.basicConfig(level=logLevel)
-    process(isDryRun, store_type, *args)
+    process(isDryRun, is_aws, *args)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

@@ -22,13 +22,13 @@ only visible by you. If compromised - reset the keys @ https://apps.twitter.com
 Besides the evn variables you also need to setup the config. Example of config is provided - twConfig.cfg
 
 Example to run the app
-python processRss -d -s ~/.twStore <config files>
+python -m process_rss -d -s ~/.twStore <config files>
 
 possible params
 <config files>:list of comma seperated path to config files. The files are read in sequence so can override each other
+-a, --aws [Optional]: The optional flag that indicates that the storage will be saved to AWS S3 disk
 -h, --help Help
 -d, --dryRun [optional]: if you want to just see the items read but not published to twitter
--t, --type [optional]: type of store to use 0 - local file based, 1 - aws s3 implementation
 -v, --verbose: verbose output
 
 
