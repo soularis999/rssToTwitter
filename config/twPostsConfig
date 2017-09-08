@@ -1,0 +1,244 @@
+[netflix]
+# feed url
+url=https://medium.com/feed/netflix-techblog
+# number of posts between now and previous check
+numPosts=1
+
+[SRC:CLR]
+url=https://www.sourceclear.com/blog/index.xml
+numPosts=2
+
+[zenefits]
+url=https://engineering.zenefits.com/posts/feed/
+numPosts=1
+
+[toptal]
+url=https://www.toptal.com/blog.rss
+numPosts=1
+
+[yammer-engineering]
+url=https://medium.com/feed/yammer-engineering
+numPosts=1
+
+[etsy]
+url=https://codeascraft.com/feed/
+numPosts=1
+
+[four square]
+url=https://engineering.foursquare.com/feed
+numPosts=1
+
+[air bnb]
+url=https://medium.com/feed/airbnb-engineering
+numPosts=1
+
+[web engage]
+url=http://engineering.webengage.com/feed/
+numPosts=1
+
+[linked in]
+url=https://engineering.linkedin.com/blog.rss
+numPosts=1
+
+[bank simple]
+url=https://engineering.linkedin.com/blog.rss
+numPosts=1
+
+[square]
+url=https://medium.com/feed/square-corner-blog
+numPosts=1
+
+[simantics]
+url=https://engineering.semantics3.com/feed
+numPosts=1
+
+[sound cloud]
+url=http://feeds.feedburner.com/soundcloudapiblog
+numPosts=1
+
+[flickr]
+url=http://code.flickr.net/feed/
+numPosts=1
+
+[dropbox]
+url=https://blogs.dropbox.com/tech/feed/
+numPosts=1
+
+[instagram]
+url=https://engineering.instagram.com/feed
+numPosts=1
+
+[cloudera]
+url=http://blog.cloudera.com/feed/
+numPosts=1
+
+[reddit]
+url=https://redditblog.com/feed/
+numPosts=1
+
+[github]
+url=https://github.com/blog/engineering.atom
+numPosts=1
+
+[pinterest]
+url=https://medium.com/feed/@Pinterest_Engineering
+numPosts=1
+
+[live chat]
+url=https://developers.livechatinc.com/blog/rss
+numPosts=1
+
+[heroku]
+url=https://blog.heroku.com/engineering/feed
+numPosts=1
+
+[strava]
+url=https://medium.com/feed/strava-engineering
+numPosts=1
+
+[uber]
+url=http://eng.uber.com/feed/
+numPosts=1
+
+[500px]
+url=https://developers.500px.com/feed
+numPosts=1
+
+[lyft]
+url=https://eng.lyft.com/feed
+numPosts=1
+
+[chenel9]
+url=https://s.ch9.ms/Feeds/RSS
+numPosts=1
+
+[windows azure]
+url=https://azure.microsoft.com/en-us/blog/feed/
+numPosts=1
+
+[aws blog]
+url=http://feeds.feedburner.com/AmazonWebServicesBlog
+numPosts=1
+
+[google cloud]
+url=http://feeds.feedburner.com/ClPlBl
+numPosts=1
+
+[sql server blog]
+url=https://blogs.technet.microsoft.com/cloudplatform/rssfeeds/dataplatform
+numPosts=1
+
+[microsoft dev tools]
+url=https://blogs.technet.microsoft.com/cloudplatform/rssfeeds/devblogs
+numPosts=1
+
+[stackoverflow]
+url=https://stackoverflow.blog/feed/
+numPosts=1
+
+[signal vs noice]
+url=https://m.signalvnoise.com/feed/
+numPosts=1
+
+[martin fowler]
+url=https://martinfowler.com/feed.atom
+numPosts=1
+
+[Code Better]
+url=http://feeds.feedburner.com/CodeBetter
+numPosts=1
+
+[hanselman]
+url=http://feeds.hanselman.com/scotthanselman
+numPosts=1
+
+[steve yegge]
+url=http://steve-yegge.blogspot.com/atom.xml
+numPosts=1
+
+[scott berkun]
+url=http://scottberkun.com/feed/
+numPosts=1
+
+[linux programming]
+url=http://www.linuxprogrammingblog.com/rss.xml
+numPosts=1
+
+[oma photo blog]
+url=https://omexperience.wordpress.com/feed/
+numPosts=1
+
+[java specialists]
+url=http://www.javaspecialists.eu/archive/tjsn.rss
+numPosts=1
+
+[shpilenok photo]
+url=http://shpilenok.livejournal.com/data/rss
+numPosts=1
+
+[embeded]
+url=http://www.embedded.com/rss/contentgroup/27
+numPosts=1
+
+[old new thing msdn blog]
+url=https://blogs.msdn.microsoft.com/oldnewthing/feed
+numPosts=1
+
+[tjholowaychuk]
+url=https://medium.com/feed/@tjholowaychuk
+numPosts=1
+
+[winterbe]
+url=http://feeds.feedburner.com/winterbe
+numPosts=1
+
+[conversant]
+url=http://engineering.conversantmedia.com/feed
+numPosts=1
+
+[braintree]
+url=https://www.braintreepayments.com/blog/rss/
+numPosts=1
+
+[NY times]
+url=https://open.nytimes.com/feed
+numPosts=1
+
+[ScyllaDB]
+url=http://www.scylladb.com/developers-blog/feed/
+numPosts=1
+
+[Civis]
+url=https://www.civisanalytics.com/blog/feed/
+numPosts=1
+
+[AWS startup collection]
+url=https://medium.com/feed/aws-activate-startup-blog/
+numPosts=1
+
+[AWS startups]
+url=http://feeds.feedburner.com/AwsStartupsBlog
+numPosts=1
+
+[Insurge intelligence]
+url=https://medium.com/feed/insurge-intelligence
+numPosts=1
+
+[Dave Farley]
+url=http://www.davefarley.net/?feed=rss2
+numPosts=1
+
+[Think foo]
+url=https://thinkfoo.wordpress.com/feed/
+numPosts=1
+
+[Martin Fowler]
+url=https://martinfowler.com/feed.atom
+numPosts=1
+
+[Cloud flare]
+url=https://blog.cloudflare.com/rss/
+numPosts=1
+
+
+
