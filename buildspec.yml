@@ -11,6 +11,10 @@ phases:
   pre_build:
     commands:
       - echo "pre build phase"
+      - ls -ltr
+      - virtualenv /tmp/rssToTwitter
+      - source /tmp/rssToTwitter/bin/activate
+      - pip install -r requirements.txt
   build:
     commands:
       - echo "build phase"
