@@ -86,7 +86,7 @@ class TestProcess(unittest.TestCase):
                           [mock.call('service1', STORE('service1', 'postA', 1500527415)),
                            mock.call('service2', STORE('service2', 'postA', 1500527415))])
         # test write is called
-        data_store.return_value.write_store.assert_called_once_with()
+        data_store.return_value.write_store.assert_called_once_with([])
 
     def test_cleanup_feeds(self):
         # given test case
