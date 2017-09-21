@@ -39,7 +39,8 @@ class TestConfig(unittest.TestCase):
             del os.environ[feed_config.STORE_FILE_NAME_ENV]
 
     def test_fileparse(self):
-        config = feed_config.Config(os.path.expanduser('testConfig.cfg'))
+        file = '%s/testConfig.cfg' % os.path.dirname(os.path.realpath(__file__))
+        config = feed_config.Config(file)
 
         # then
         self.assertEqual(config['netflix'].url, 'https://medium.com/feed/netflix')
@@ -53,7 +54,9 @@ class TestConfig(unittest.TestCase):
 
     def test_multipleFiles(self):
         # when
-        config = feed_config.Config(os.path.expanduser('testConfig.cfg'), os.path.expanduser('testConfig2.cfg'))
+        file = '%s/testConfig.cfg' % os.path.dirname(os.path.realpath(__file__))
+        file2 = '%s/testConfig2.cfg' % os.path.dirname(os.path.realpath(__file__))
+        config = feed_config.Config(file, file2)
 
         # then
         self.assertEqual(config.globalConfig("MAIN").numToProcessAtOneTime, 10)
