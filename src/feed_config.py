@@ -84,7 +84,7 @@ class Config(object):
         The method gets the set of sections to return
         :return: SERVICE object for the section requested
         """
-        return self._services.keys()
+        return list(self._services.keys())
 
     def globalConfig(self, type):
         """
@@ -100,7 +100,7 @@ class Config(object):
         elif type is "AWS":
             return self._aws
         else:
-            raise SystemError("Type %s is not supported" % s)
+            raise SystemError("Type %s is not supported" % type)
 
     def _validate(self):
         twitterError = None

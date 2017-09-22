@@ -77,9 +77,9 @@ class TestProcess(unittest.TestCase):
         # test post is called
         self.assertEqual(mock_post.return_value.prepare.call_args_list,
                          [
-                             mock.call((service1, "postB", 1494880615), 'post 1 title', 'httpd://test1.com'),
-                             mock.call((service1, "postA", 1500527415), 'post 2 title', 'httpd://test2.com'),
-                             mock.call((service2, "postA", 1500527415), 'post 2 title', 'httpd://test2.com')])
+                             mock.call((service1, "postB", 1494880615.0), 'post 1 title', 'httpd://test1.com'),
+                             mock.call((service1, "postA", 1500527415.0), 'post 2 title', 'httpd://test2.com'),
+                             mock.call((service2, "postA", 1500527415.0), 'post 2 title', 'httpd://test2.com')])
         mock_post.return_value.post.assert_called_once_with()
         # test store is called to save data
         self.assertEquals(data_store.return_value.__setitem__.call_args_list,
@@ -119,7 +119,7 @@ class TestProcess(unittest.TestCase):
         ]
 
         for index, case in enumerate(test_cases):
-            print index, ' ', case
+            print(index, ' ', case)
 
             # when - test with None store
             result = cleanup_feeds(case.store, case.numItems, case.data)

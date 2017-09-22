@@ -22,9 +22,9 @@ def get_id_from_post(post):
     :param post: post
     :return: id
     """
-    title = post['title'].encode('utf-8') if 'title' in post and post['title'] else None
-    url = post['link'].encode('utf-8') if 'link' in post and post['link'] else title
-    return post['id'].encode('utf-8') if 'id' in post and post['id'] else url
+    title = post['title'] if 'title' in post and post['title'] else None
+    url = post['link'] if 'link' in post and post['link'] else title
+    return post['id'] if 'id' in post and post['id'] else url
 
 
 def cleanup_feeds(store, num_posts, entries):
@@ -71,8 +71,8 @@ def process_posts(conf_data, post, tp):
     :param tp: twitter publisher
     :return: true if prepare was successfull or False otherwise
     """
-    title = post['title'].encode('utf-8') if 'title' in post and post['title'] else None
-    url = post['link'].encode('utf-8') if 'link' in post and post['link'] else None
+    title = post['title'] if 'title' in post and post['title'] else None
+    url = post['link'] if 'link' in post and post['link'] else None
     id = get_id_from_post(post)
     date = (parse_published_date(post) - datetime.utcfromtimestamp(0)).total_seconds()
 
@@ -128,7 +128,8 @@ def process(dry_run=False, is_aws=False, *files):
         if conf_data not in filtered_services or filtered_services[conf_data][2] < date:
             filtered_services[conf_data] = key
 
-    for conf_data, item in filtered_services.iteritems():
+    for conf_data in filtered_services:
+        item = filtered_services[conf_data]
         store[conf_data.serviceName] = STORE(conf_data.serviceName, item[1], item[2])
 
     # in the end - write the store
@@ -138,7 +139,7 @@ def process(dry_run=False, is_aws=False, *files):
 
 
 def usage():
-    print """Usage: processRss -d <config files>
+    print("""Usage: processRss -d <config files>
              Where:
              -a | --aws [Optional] - if set the AWS S3 storage will be used
              -d | --dryrun: do not publish to twitter - just get data and update the store
@@ -146,7 +147,7 @@ def usage():
              -h | --help: help
              
              <config files> - the list of config files to use
-             """
+             """)
 
 
 def main(params):

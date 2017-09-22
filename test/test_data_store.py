@@ -41,7 +41,7 @@ class TestDataStore(unittest.TestCase):
 
         # then
         self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
-        self.assertEqual(sorted(file(TMP_STORE_FILE_PATH).readlines()),
+        self.assertEqual(sorted(open(TMP_STORE_FILE_PATH).readlines()),
                          ["T1||\n", "T2||\n", "T3|id3|\n", "T4||5555545\n", "T5|id5|444555666\n", "T6|id6|555666777\n"])
 
         # when - try reading the file back
@@ -110,7 +110,7 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(bucket_mock.upload_file.call_args, mock.call("/tmp/twStore", "twStore"))
 
         self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
-        self.assertEqual(sorted(file(TMP_STORE_FILE_PATH).readlines()),
+        self.assertEqual(sorted(open(TMP_STORE_FILE_PATH).readlines()),
                          ["T1||\n", "T2||\n", "T3|id3|\n", "T4||5555545\n", "T5|id5|444555666\n", "T6|id6|555666777\n"])
 
         # when - try reading the file back

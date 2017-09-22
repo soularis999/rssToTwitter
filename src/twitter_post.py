@@ -1,5 +1,5 @@
 import oauth2
-import urllib
+import urllib.parse
 import logging
 
 TWITTER_STATUS_POST_URL = "https://api.twitter.com/1.1/statuses/update.json?"
@@ -38,7 +38,7 @@ class TwitterPost(object):
         results = {}
         for post in self._posts:
             self._params["status"] = post[1]
-            query = urllib.urlencode(self._params)
+            query = urllib.parse.urlencode(self._params)
 
             log.info("Posting: %s%s" % (TWITTER_STATUS_POST_URL, query))
             result = True

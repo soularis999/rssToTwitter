@@ -91,7 +91,7 @@ class TestConfig(unittest.TestCase):
             del os.environ[feed_config.USER_TWITTER_SECRET_ENV]
             feed_config.Config('./testConfig.cfg', './testConfig2.cfg')
 
-        self.assertEqual(e.exception.message,
+        self.assertEqual(e.exception.args[0],
                          "Twitter app was not configured (app key,app secret,user key,user secret). "
                          "Did you setup the env variables as defined in README?")
 

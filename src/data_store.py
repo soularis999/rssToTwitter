@@ -66,12 +66,12 @@ class FileBasedDataStore(DataStore):
         if not os.path.exists(f_path):
             return
 
-        with file(f_path, 'r') as f:
+        with open(f_path, 'r') as f:
             for line in f:
                 data = line.strip().split("|")
                 section_name = util.encode(data[0])
 
-                time = long(data[2]) if data[2] else None
+                time = int(data[2]) if data[2] else None
                 last_id = data[1] if data[1] else None
                 if time and last_id:
                     record = STORE(section_name, data[1], time)
@@ -98,9 +98,9 @@ class FileBasedDataStore(DataStore):
             return text
 
         # write everything in store
-        results = map(lambda sname: write(sname, self._stores[sname]), self._stores.keys())
+        results = list(map(lambda sname: write(sname, self._stores[sname]), self._stores.keys()))
         if not self._dry_run:
-            with file(f_path, 'w') as f:
+            with open(f_path, 'w') as f:
                 f.writelines(results)
 
         log.info("Saved %i records" % len(results))
