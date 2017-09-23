@@ -9,11 +9,11 @@ APP_TWITTER_KEY - application key to connect to twitter
 APP_TWITTER_SECRET - application secret for twitter app
 USER_TWITTER_KEY - user key to connect to twitter
 USER_TWITTER_SECRET - user secret
-AWS_KEY_ENV - [OPTIONAL] - AWS key to connect to S3
-AWS_SECRET_ENV - [OPTIONAL] - AWS secret to connect to S3
-AWS_S3_BUCKET_ENV - [OPTIONAL] - the bucket to put and read the store file from
-TWEETS_AT_ONE_TIME_ENV [OPTIONAL, Default: 15] - Number of posts to post at one time
-STORE_FILE_NAME_ENV [OPTIONAL, Default: ~/.twStore] - where to store the posted data to so application would not
+AWS_KEY - [OPTIONAL] - AWS key to connect to S3
+AWS_SECRET - [OPTIONAL] - AWS secret to connect to S3
+AWS_S3_BUCKET - [OPTIONAL] - the bucket to put and read the store file from
+TWEETS_AT_ONE_TIME [OPTIONAL, Default: 15] - Number of posts to post at one time
+STORE_FILE_NAME [OPTIONAL, Default: ~/.twStore] - where to store the posted data to so application would not
     post the same tweets again after restart
 
 The app and user keys can be setup online @ https://apps.twitter.com. Please make sure the secrets are secure and

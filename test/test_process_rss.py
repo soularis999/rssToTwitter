@@ -6,8 +6,9 @@ import feed_config
 from process_rss import process, cleanup_feeds
 from feed_config import SERVICE, TWITTER, AWS_STORAGE, MAIN
 from data_store import STORE
-from test_data_store import TMP_STORE_FILE_PATH
 from collections import namedtuple
+
+TMP_STORE_FILE_PATH = "/tmp/twStore"
 
 
 class TestProcess(unittest.TestCase):

@@ -7,7 +7,7 @@ virtualenv /tmp/rssToTwitter
 source /tmp/rssToTwitter/bin/activate
 pip install -r requirements.txt
 
-cd $VIRTUAL_ENV/lib/python2.7/site-packages/
+cd $VIRTUAL_ENV/lib/python3.6/site-packages/
 zip -r9 ~/rsstotwitter.zip *
 
 cd ~/projects/rssToTwitter/src/
