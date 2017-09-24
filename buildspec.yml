@@ -7,17 +7,24 @@ phases:
       - echo "Install phase"
       - sudo apt-get clean
       - sudo apt-get -y update && sudo apt-get -y upgrade
-      - sudo apt-get -y install python
+      - sudo apt-get -y install python3.6
+      - sudo pip install virtualenv
   pre_build:
     commands:
       - echo "pre build phase"
-      - ls -ltr
+      - pwd
+      - ls -la
       - virtualenv /tmp/rssToTwitter
       - source /tmp/rssToTwitter/bin/activate
-      - pip install -r requirements.txt
+      - pip install -r config/requirements.txt
   build:
     commands:
       - echo "build phase"
+      - cd $VIRTUAL_ENV/lib/python3.6/site-packages/
+      - zip -r9 ~/rsstotwitter.zip *
+
+      - cd ~/
+      - ls -la
   post_build:
     commands:
       - echo "post build phase"
