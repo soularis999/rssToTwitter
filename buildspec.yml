@@ -9,23 +9,15 @@ phases:
   pre_build:
     commands:
       - echo "pre build phase"
-      - pwd
-      - ls -la
-      - /bin/bash
-      - pip list
-      - virtualenv /tmp/rssToTwitter
-      - . /tmp/rssToTwitter/bin/activate
-      - pip install -r config/requirements.txt
+      - virtualenv -p python3.5 tmp/
+      - . tmp/bin/activate
+      - pip install --upgrade -r config/requirements.txt
   build:
     commands:
       - echo "build phase"
-      - ls -la $VIRTUAL_ENV
-      - ls -la $VIRTUAL_ENV/lib/
-      - cd $VIRTUAL_ENV/lib/python3.5/site-packages/
-      - zip -r9 ~/rsstotwitter.zip *
-
-      - cd ~/
-      - ls -la
+      - cd tmp/lib/python3.5/site-packages/
+      - zip -r9 /tmp/rsstotwitter.zip *
+      
   post_build:
     commands:
       - echo "post build phase"
