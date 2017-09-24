@@ -12,11 +12,7 @@ phases:
       - pwd
       - ls -la
       - virtualenv /tmp/rssToTwitter
-      - sudo -s
-      - ls -la /tmp/rssToTwitter/bin/
-      - ls -la /tmp/rssToTwitter/lib/
-      - bash
-      - source /tmp/rssToTwitter/bin/activate
+      - source /tmp/rssToTwitter/bin/activate.csh
       - pip install -r config/requirements.txt
   build:
     commands:
