@@ -14,7 +14,7 @@ phases:
       - /bin/bash
       - pip list
       - virtualenv /tmp/rssToTwitter
-      - source /tmp/rssToTwitter/bin/activate.csh
+      - . /tmp/rssToTwitter/bin/activate
       - pip install -r config/requirements.txt
   build:
     commands:
