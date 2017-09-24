@@ -6,6 +6,7 @@ phases:
     commands:
       - echo "Install phase"
       - sudo pip install virtualenv
+      - /bin/bash
   pre_build:
     commands:
       - echo "pre build phase"
