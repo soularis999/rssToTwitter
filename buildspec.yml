@@ -11,15 +11,16 @@ phases:
   pre_build:
     commands:
       - echo "pre build phase"
-      - virtualenv -p python3.5 tmp/
-      - . tmp/bin/activate
+      - virtualenv -p python3.5 rsstotwitter
+      - . rsstotwitter/bin/activate
       - pip install --upgrade -r config/requirements.txt
   build:
     commands:
       - echo "build phase"
-      - cd tmp/lib/python3.5/site-packages/
-      - zip -r9 ../../../../rsstotwitter.zip *
-      - cd ../../../../src/
+      - cd rsstotwitter/lib/python3.5/site-packages/
+      - zip -r9 ../../../rsstotwitter.zip *
+      - cd ../../../src/
+      - ls -la
       - zip -rg ../rsstotwitter.zip *
       - cd ../config
       - zip -g ../rsstotwitter.zip twPostsConfig
