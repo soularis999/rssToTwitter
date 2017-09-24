@@ -18,13 +18,12 @@ phases:
     commands:
       - echo "build phase"
       - cd rsstotwitter/lib/python3.5/site-packages/
-      - zip -r9 ../../../rsstotwitter.zip *
-      - cd ../../../src/
+      - zip -r9 /tmp/rsstotwitter.zip *
+      - cd ../../../../src/
       - ls -la
-      - zip -rg ../rsstotwitter.zip *
+      - zip -rg /tmp/rsstotwitter.zip *
       - cd ../config
-      - zip -g ../rsstotwitter.zip twPostsConfig
-      - cd ../
+      - zip -g /tmp/rsstotwitter.zip twPostsConfig
   post_build:
     commands:
       - echo "post build phase"
