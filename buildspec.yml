@@ -14,6 +14,7 @@ phases:
       - virtualenv /tmp/rssToTwitter
       - sudo -s
       - ls -la /tmp/rssToTwitter
+      - bash
       - source /tmp/rssToTwitter/bin/activate
       - pip install -r config/requirements.txt
   build:
