@@ -6,12 +6,13 @@ phases:
     commands:
       - echo "Install phase"
       - sudo pip install virtualenv
-      - /bin/bash
   pre_build:
     commands:
       - echo "pre build phase"
       - pwd
       - ls -la
+      - /bin/bash
+      - pip list
       - virtualenv /tmp/rssToTwitter
       - source /tmp/rssToTwitter/bin/activate.csh
       - pip install -r config/requirements.txt
