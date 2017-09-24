@@ -5,6 +5,7 @@ phases:
   install:
     commands:
       - echo "Install phase"
+      - sudo apt-get install zip
       - sudo pip install virtualenv
   pre_build:
     commands:
@@ -16,11 +17,16 @@ phases:
     commands:
       - echo "build phase"
       - cd tmp/lib/python3.5/site-packages/
-      - zip -r9 /tmp/rsstotwitter.zip *
-      
+      - zip -r9 ../../../../rsstotwitter.zip *
+      - cd ../../../../src/
+      - zip -rg ../rsstotwitter.zip *
+      - cd ../config
+      - zip -g ../rsstotwitter.zip twPostsConfig
+      - cd ../
   post_build:
     commands:
       - echo "post build phase"
+      - cp rsstotwitter.zip /tmp/
 artifacts:
   files:
     - target/rsstotwitter.zip
