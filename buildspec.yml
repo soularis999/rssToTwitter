@@ -22,5 +22,5 @@ phases:
       - ls -la
 artifacts:
   files:
-    - target/rsstotwitter.zip
+    - /tmp/rsstotwitter.zip
   discard-paths: yes
