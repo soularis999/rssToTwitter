@@ -18,6 +18,7 @@ phases:
     commands:
       - echo "build phase"
       - cd rsstotwitter/lib/python3.5/site-packages/
+      - ls -la
       - zip -r9 /tmp/rsstotwitter.zip *
       - cd ../../../../src/
       - ls -la
