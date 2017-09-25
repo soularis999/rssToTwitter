@@ -12,7 +12,7 @@ phases:
     commands:
       - echo "pre build phase"
       - virtualenv -p python3.5 rsstotwitter
-      - . rsstotwitter/bin/activate
+      - /bin/bash && source rsstotwitter/bin/activate
       - pip install --upgrade -r config/requirements.txt
   build:
     commands:
