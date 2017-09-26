@@ -14,5 +14,5 @@ cd src/; \
 zip -rg ../rsstotwitter.zip --exclude=*.pyc *; \
 cd ../config; \
 zip -g ../rsstotwitter.zip twPostsConfig; \
-cp rsstotwitter.zip /tmp/;
+cp ../rsstotwitter.zip /tmp/;
 
