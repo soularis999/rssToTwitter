@@ -61,7 +61,7 @@ class TestProcess(unittest.TestCase):
             (service2, "postA", 1500527415): False
         }
 
-        process(False, 0, "file1", "file2")
+        process(False, False, "file1", "file2")
 
         # then
         # test config open is called
@@ -72,7 +72,7 @@ class TestProcess(unittest.TestCase):
         # test get is called
 
         self.assertEqual(mock_config.return_value.__getitem__.call_args_list,
-                          [mock.call("service1"), mock.call("service2")])
+                         [mock.call("service1"), mock.call("service2")])
         # test parse is called to get feed
         self.assertEqual(mock_parser.call_args_list, [mock.call("test1url"), mock.call("test2url")])
         # test post is called
@@ -83,10 +83,16 @@ class TestProcess(unittest.TestCase):
                              mock.call((service2, "postA", 1500527415.0), 'post 2 title', 'httpd://test2.com')])
         mock_post.return_value.post.assert_called_once_with()
         # test store is called to save data
-        self.assertEqual(data_store.return_value.__setitem__.call_args_list,
-                        [
-                            mock.call('service1', STORE('service1', 'postA', 1500527415)),
-                            mock.call('service2', STORE('service2', 'postA', 1500527415))])
+        self.assertEqual(
+            len(data_store.return_value.__setitem__.call_args_list), 2)
+        self.assertTrue(
+            mock.call('service1', STORE('service1', 'postA', 1500527415)) in
+            data_store.return_value.__setitem__.call_args_list
+        )
+        self.assertTrue(
+            mock.call('service2', STORE('service2', 'postA', 1500527415)) in
+            data_store.return_value.__setitem__.call_args_list
+        )
         # test write is called
         data_store.return_value.write_store.assert_called_once_with([])
 
