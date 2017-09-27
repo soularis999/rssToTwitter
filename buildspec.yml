@@ -15,11 +15,11 @@ phases:
     commands:
       - echo "build phase"
       - config/test_aws.sh
+      - config/build_aws.sh
+      - ls -la
   post_build:
     commands:
       - echo "post build phase"
-      - config/build_aws.sh
-      - ls -la
 artifacts:
   files:
     - /tmp/rsstotwitter.zip
