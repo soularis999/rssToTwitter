@@ -14,9 +14,9 @@ phases:
   build:
     commands:
       - echo "build phase"
+      - ls -la
       - config/test_aws.sh
       - config/build_aws.sh
-      - ls -la
   post_build:
     commands:
       - echo "post build phase"
