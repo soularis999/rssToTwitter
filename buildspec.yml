@@ -11,11 +11,12 @@ phases:
   pre_build:
     commands:
       - echo "pre build phase"
+      - chmod 755 config/test_aws.sh
+      - chmod 755 config/build_aws.sh
   build:
     commands:
       - echo "build phase"
       - ls -la
-      - ls -la config/
       - config/test_aws.sh
       - config/build_aws.sh
   post_build:
