@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 MAIN = namedtuple("Main", "numToProcessAtOneTime storeFileName")
 SERVICE = namedtuple("Service", "serviceName url numPosts")
-AWS_STORAGE = namedtuple("AWS", "awsAccessKey awsAccessSecret awsBucket")
+AWS_STORAGE = namedtuple("AWS", "awsAccessKey awsAccessSecret awsBucket awsFileName")
 TWITTER = namedtuple("TwitterApp", "appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
 
 APP_TWITTER_KEY_ENV = "APP_TWITTER_KEY"
@@ -19,12 +19,13 @@ USER_TWITTER_SECRET_ENV = "USER_TWITTER_SECRET"
 AWS_KEY_ENV = "AWS_KEY"
 AWS_SECRET_ENV = "AWS_SECRET"
 AWS_S3_BUCKET_ENV = "AWS_S3_BUCKET"
+AWS_S3_STORE_FILE_NAME_ENV = "AWS_S3_STORE_FILE_NAME"
 TWEETS_AT_ONE_TIME_ENV = "TWEETS_AT_ONE_TIME"
 STORE_FILE_NAME_ENV = "STORE_FILE_NAME"
 
 DEFAULT_STORE_PATH = "~/.twStore"
 DEFAULT_S3_BUCKET = "rsstotwitter"
-
+DEFAULT_AWS_S3_STORE_FILE_NAME = ".twStore"
 
 class Config(object):
     """
@@ -39,9 +40,14 @@ class Config(object):
                               os.environ[
                                   STORE_FILE_NAME_ENV] if STORE_FILE_NAME_ENV in os.environ else DEFAULT_STORE_PATH))
 
+        aws_store_file_name = os.environ[AWS_S3_STORE_FILE_NAME_ENV] \
+            if AWS_S3_STORE_FILE_NAME_ENV in os.environ \
+            else DEFAULT_AWS_S3_STORE_FILE_NAME
+
         self._aws = AWS_STORAGE(os.environ[AWS_KEY_ENV] if AWS_KEY_ENV in os.environ else None,
                                 os.environ[AWS_SECRET_ENV] if AWS_SECRET_ENV in os.environ else None,
-                                os.environ[AWS_S3_BUCKET_ENV] if AWS_S3_BUCKET_ENV in os.environ else DEFAULT_S3_BUCKET
+                                os.environ[AWS_S3_BUCKET_ENV] if AWS_S3_BUCKET_ENV in os.environ else DEFAULT_S3_BUCKET,
+                                aws_store_file_name
                                 )
 
         self._twitterApp = TWITTER(os.environ[APP_TWITTER_KEY_ENV] if APP_TWITTER_KEY_ENV in os.environ else None,

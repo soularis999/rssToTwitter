@@ -80,15 +80,12 @@ class TestDataStore(unittest.TestCase):
 
     @mock.patch("boto3.resource")
     def test_s3_store(self, mock_boto):
-        #        self._connection = boto3.resource('s3', aws_access_key_id=aws_config.awsAccessKey,
-        #                                   aws_secret_access_key=aws_config.awsAccessSecret)
-        # self._connection.Bucket(aws_config.awsBucket).download_file(file_name, config.storeFileName)
         resource_mock = mock.MagicMock()
         bucket_mock = mock.MagicMock()
         mock_boto.return_value = resource_mock
         resource_mock.Bucket.return_value = bucket_mock
 
-        config = S3BasedDataStore(MAIN(15, TMP_STORE_FILE_PATH), AWS_STORAGE("awskey", "awssecret", "awsbucket"))
+        config = S3BasedDataStore(MAIN(15, TMP_STORE_FILE_PATH), AWS_STORAGE("awskey", "awssecret", "awsbucket", "awsfile"))
 
         # then
         self.assertEqual(len(config), 0)
@@ -106,8 +103,8 @@ class TestDataStore(unittest.TestCase):
         self.assertEqual(mock_boto.call_args,
                          mock.call('s3', aws_access_key_id='awskey', aws_secret_access_key='awssecret'))
         self.assertEqual(resource_mock.Bucket.call_args, mock.call("awsbucket"))
-        self.assertEqual(bucket_mock.download_file.call_args, mock.call("twStore", "/tmp/twStore"))
-        self.assertEqual(bucket_mock.upload_file.call_args, mock.call("/tmp/twStore", "twStore"))
+        self.assertEqual(bucket_mock.download_file.call_args, mock.call("awsfile", "/tmp/twStore"))
+        self.assertEqual(bucket_mock.upload_file.call_args, mock.call("/tmp/twStore", "awsfile"))
 
         self.assertTrue(os.path.exists(TMP_STORE_FILE_PATH))
         self.assertEqual(sorted(open(TMP_STORE_FILE_PATH).readlines()),

@@ -112,7 +112,7 @@ class FileBasedDataStore(DataStore):
 class S3BasedDataStore(FileBasedDataStore):
     def __init__(self, config, aws_config, dry_run=False):
         self._aws_config = aws_config
-        self._aws_file_name = os.path.basename(config.storeFileName)
+        self._aws_file_name = self._aws_config.awsFileName
 
         from boto3 import resource
 

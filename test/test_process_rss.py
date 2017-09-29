@@ -27,7 +27,7 @@ class TestProcess(unittest.TestCase):
         service2 = SERVICE("service2", "test2url", 1)
 
         main = MAIN(10, TMP_STORE_FILE_PATH)
-        aws = AWS_STORAGE("awsKey", "awsSecret", "awsBucket")
+        aws = AWS_STORAGE("awsKey", "awsSecret", "awsBucket", "awsFile")
         twitter = TWITTER("test1AppKey", "test1AppSecret", "test1UserKey", "test1UserSecret")
 
         # when
