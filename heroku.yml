@@ -1,0 +1,6 @@
+run:
+  worker: python -m process_rss -d ../config/twPostsConfig
+  asset-syncer:
+    command:
+      - cd src/
+    image: worker
