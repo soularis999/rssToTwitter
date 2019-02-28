@@ -7,7 +7,7 @@ import logging
 import sys
 import getopt
 
-from data_store import FileBasedDataStore, S3BasedDataStore, STORE
+from data_store import FileBasedDataStore, S3BasedDataStore, DBBasedDataStore, STORE
 from feedparser import parse
 from twitter_post import TwitterPost
 from feed_config import Config
@@ -80,7 +80,7 @@ def process_posts(conf_data, post, tp):
     return tp.prepare(key, title, url)
 
 
-def process(dry_run=False, is_aws=False, *files):
+def process(dry_run=False, run_type="local", *files):
     """
     Given the config files the method coordinates the retrieval of the data and publishing it to twitter
     :param dry_run: is this a test run - in this case data will be read but not published to twitter and store will not
@@ -91,10 +91,21 @@ def process(dry_run=False, is_aws=False, *files):
     mainConfig = config.globalConfig("MAIN")
     twitter = config.globalConfig("TWITTER")
     aws = config.globalConfig("AWS")
+    db = config.globalConfig("DB")
 
-    store = S3BasedDataStore(mainConfig, aws, dry_run) if is_aws else FileBasedDataStore(mainConfig, dry_run)
+    log.info("Running with %s, %s" % (run_type, dry_run))
+
+    print(run_type is "db")
+    store = None
+    if run_type == "aws":
+        store = S3BasedDataStore(mainConfig, aws, dry_run)
+    elif run_type == "db":
+        store = DBBasedDataStore(db, dry_run)
+    else:
+        store = FileBasedDataStore(mainConfig, dry_run)
+        
     tp = TwitterPost(twitter, dry_run)
-
+    
     num_items = 0
     for service in config.services():
         conf_data = config[service]
@@ -141,7 +152,7 @@ def process(dry_run=False, is_aws=False, *files):
 def usage():
     print("""Usage: processRss -d <config files>
              Where:
-             -a | --aws [Optional] - if set the AWS S3 storage will be used
+             -t | --type [Optional] - can be local, db or aws - defaults to local
              -d | --dryrun: do not publish to twitter - just get data and update the store
              -v | --verbose: the verbose output
              -h | --help: help
@@ -152,27 +163,31 @@ def usage():
 
 def main(params):
     try:
-        opts, args = getopt.getopt(params, "adh:v", ["aws", "dryRun", "help", "verbose"])
+        opts, args = getopt.getopt(params, "t:dh:v", ["type", "dryRun", "help", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
-    isDryRun = False
-    logLevel = logging.INFO
-    is_aws = False
+    is_dry_run = False
+    log_level = logging.INFO
+    run_type = "local"
     for option, var in opts:
-        if option in ("-a", "--aws"):
-            is_aws = True
+        if option in ("-t", "--type"):
+            run_type = var.strip()
         elif option in ("-h", "--help"):
             usage()
             sys.exit()
         elif option in ("-d", "--dryrun"):
-            isDryRun = True
+            is_dry_run = True
         elif option in ("-v", "--verbose"):
-            logLevel = logging.DEBUG
+            log_level = logging.DEBUG
 
-    logging.basicConfig(level=logLevel)
-    process(isDryRun, is_aws, *args)
+    if run_type not in ["local", "aws", "db"]:
+        usage()
+        sys.exit(2)
+        
+    logging.basicConfig(level=log_level)
+    process(is_dry_run, run_type, *args)
 
 
 if __name__ == "__main__":

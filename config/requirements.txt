@@ -11,3 +11,4 @@ pbr==3.1.1
 python-dateutil==2.6.1
 s3transfer==0.1.11
 six==1.11.0
+psycopg2-binary==2.7.7

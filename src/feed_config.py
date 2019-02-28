@@ -11,17 +11,23 @@ MAIN = namedtuple("Main", "numToProcessAtOneTime storeFileName")
 SERVICE = namedtuple("Service", "serviceName url numPosts")
 AWS_STORAGE = namedtuple("AWS", "awsAccessKey awsAccessSecret awsBucket awsFileName")
 TWITTER = namedtuple("TwitterApp", "appTwitterKey appTwitterSecret userTwitterKey userTwitterSecret")
+DB = namedtuple("DB", "url sslmode")
 
 APP_TWITTER_KEY_ENV = "APP_TWITTER_KEY"
 APP_TWITTER_SECRET_ENV = "APP_TWITTER_SECRET"
 USER_TWITTER_KEY_ENV = "USER_TWITTER_KEY"
 USER_TWITTER_SECRET_ENV = "USER_TWITTER_SECRET"
+
 AWS_KEY_ENV = "AWS_KEY"
 AWS_SECRET_ENV = "AWS_SECRET"
 AWS_S3_BUCKET_ENV = "AWS_S3_BUCKET"
 AWS_S3_STORE_FILE_NAME_ENV = "AWS_S3_STORE_FILE_NAME"
+
 TWEETS_AT_ONE_TIME_ENV = "TWEETS_AT_ONE_TIME"
 STORE_FILE_NAME_ENV = "STORE_FILE_NAME"
+
+DATABASE_URL = "DATABASE_URL"
+SSL_MODE = "SSL_MODE"
 
 DEFAULT_STORE_PATH = "~/.twStore"
 DEFAULT_S3_BUCKET = "rsstotwitter"
@@ -56,6 +62,9 @@ class Config(object):
                                    os.environ[
                                        USER_TWITTER_SECRET_ENV] if USER_TWITTER_SECRET_ENV in os.environ else None)
 
+        self._db = DB(os.environ[DATABASE_URL] if DATABASE_URL in os.environ else None,
+                      "true" == os.environ[SSL_MODE] if SSL_MODE in os.environ else False)
+        
         config = configparser.ConfigParser()
         for configFile in files:
             log.info("reading config file %s" % configFile)
@@ -105,6 +114,8 @@ class Config(object):
             return self._twitterApp
         elif type is "AWS":
             return self._aws
+        elif type is "DB":
+            return self._db
         else:
             raise SystemError("Type %s is not supported" % type)
 
