@@ -4,7 +4,7 @@ import os
 import feed_config
 
 from process_rss import process, cleanup_feeds
-from feed_config import SERVICE, TWITTER, AWS_STORAGE, MAIN
+from feed_config import SERVICE, TWITTER, AWS_STORAGE, MAIN, DB
 from data_store import STORE
 from collections import namedtuple
 
@@ -29,9 +29,10 @@ class TestProcess(unittest.TestCase):
         main = MAIN(10, TMP_STORE_FILE_PATH)
         aws = AWS_STORAGE("awsKey", "awsSecret", "awsBucket", "awsFile")
         twitter = TWITTER("test1AppKey", "test1AppSecret", "test1UserKey", "test1UserSecret")
+        db = DB("postgres://test", None)
 
         # when
-        mock_config.return_value.globalConfig.side_effect = [main, twitter, aws]
+        mock_config.return_value.globalConfig.side_effect = [main, twitter, aws, db]
         mock_config.return_value.mainService.return_value.max_posts = 5
         mock_config.return_value.services.return_value = ["service1", "service2"]
         mock_config.return_value.__getitem__.side_effect = (service1, service2)

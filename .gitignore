@@ -3,3 +3,6 @@
 .DS_Store
 .project
 *.iml
+*~
+__pychache__
+*.pyc
