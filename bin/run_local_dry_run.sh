@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd ../src
+cd src/
 python -m process_rss -d ../config/twPostsConfig
