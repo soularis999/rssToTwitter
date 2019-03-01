@@ -149,10 +149,10 @@ def process(dry_run=False, run_type="local", *files):
 
 def _not_valid(url, feeds):
     if 'status' not in feeds:
-        log.error("Error getting feeds %s -> %s" % (url, feeds))
+        log.error("Error getting feeds %s" % url)
         return True
     elif feeds['status'] is not 200:
-        log.error("Error getting feeds %s %s -> %s" % (url, feeds['status'], feeds))
+        log.error("Error getting feeds %s %s" % (url, feeds['status'], feeds))
         return True
     return False
 
