@@ -152,7 +152,7 @@ def _not_valid(url, feeds):
         log.error("Error getting feeds %s" % url)
         return True
     elif feeds['status'] is not 200:
-        log.error("Error getting feeds %s %s" % (url, feeds['status'], feeds))
+        log.error("Error getting feeds %s %s" % (url, feeds['status']))
         return True
     return False
 
