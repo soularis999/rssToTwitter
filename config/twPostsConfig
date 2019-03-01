@@ -2,7 +2,7 @@
 # feed url
 url=https://medium.com/feed/netflix-techblog
 # number of posts between now and previous check
-numPosts=1
+numPosts=3
 
 [toptal]
 url=https://www.toptal.com/blog.rss
@@ -53,11 +53,11 @@ url=https://blogs.dropbox.com/tech/feed/
 numPosts=1
 
 [instagram]
-url=https://engineering.instagram.com/feed
-numPosts=1
+url=https://instagram-engineering.com/feed
+numPosts=3
 
 [cloudera]
-url=http://blog.cloudera.com/feed/
+url=https://blog.cloudera.com/feed/
 numPosts=1
 
 [reddit]
@@ -65,7 +65,7 @@ url=https://redditblog.com/feed/
 numPosts=1
 
 [github]
-url=https://github.blog/rss
+url=https://github.blog/feed/
 numPosts=1
 
 [pinterest]
@@ -141,11 +141,7 @@ url=http://steve-yegge.blogspot.com/atom.xml
 numPosts=1
 
 [scott berkun]
-url=http://scottberkun.com/feed/
-numPosts=1
-
-[linux programming]
-url=http://www.linuxprogrammingblog.com/rss.xml
+url=https://scottberkun.com/feed/
 numPosts=1
 
 [oma photo blog]
@@ -153,16 +149,16 @@ url=https://omexperience.wordpress.com/feed/
 numPosts=1
 
 [java specialists]
-url=http://www.javaspecialists.eu/archive/tjsn.rss
+url=https://www.javaspecialists.eu/archive/tjsn.rss
 numPosts=1
 
 [shpilenok photo]
-url=http://shpilenok.livejournal.com/data/rss
+url=https://shpilenok.livejournal.com/data/rss/
 numPosts=1
 
 [embeded]
-url=http://www.embedded.com/rss/contentgroup/27
-numPosts=1
+url=https://www.embedded.com/Rss/All
+numPosts=5
 
 [old new thing msdn blog]
 url=https://blogs.msdn.microsoft.com/oldnewthing/feed
@@ -193,7 +189,7 @@ url=http://www.scylladb.com/developers-blog/feed/
 numPosts=1
 
 [Civis]
-url=https://www.civisanalytics.com/blog/feed/
+url=https://medium.com/feed/civis-analytics
 numPosts=1
 
 [AWS startup collection]
