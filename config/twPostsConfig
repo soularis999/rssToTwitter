@@ -4,14 +4,6 @@ url=https://medium.com/feed/netflix-techblog
 # number of posts between now and previous check
 numPosts=1
 
-[SRC:CLR]
-url=https://www.sourceclear.com/blog/index.xml
-numPosts=2
-
-[zenefits]
-url=https://engineering.zenefits.com/posts/feed/
-numPosts=1
-
 [toptal]
 url=https://www.toptal.com/blog.rss
 numPosts=1
@@ -25,7 +17,7 @@ url=https://codeascraft.com/feed/
 numPosts=1
 
 [four square]
-url=https://engineering.foursquare.com/feed
+url=https://medium.com/feed/foursquare-direct/
 numPosts=1
 
 [air bnb]
@@ -46,10 +38,6 @@ numPosts=1
 
 [square]
 url=https://medium.com/feed/square-corner-blog
-numPosts=1
-
-[simantics]
-url=https://engineering.semantics3.com/feed
 numPosts=1
 
 [sound cloud]
@@ -77,15 +65,11 @@ url=https://redditblog.com/feed/
 numPosts=1
 
 [github]
-url=https://github.com/blog/engineering.atom
+url=https://github.blog/rss
 numPosts=1
 
 [pinterest]
 url=https://medium.com/feed/@Pinterest_Engineering
-numPosts=1
-
-[live chat]
-url=https://developers.livechatinc.com/blog/rss
 numPosts=1
 
 [heroku]

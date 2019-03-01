@@ -113,8 +113,7 @@ def process(dry_run=False, run_type="local", *files):
         log.info("Processing service %s -> %s" % (service, conf_data))
 
         feeds = parse(conf_data.url)
-        if 'status' not in feeds or feeds['status'] is not 200:
-            log.error("Error getting feeds %s -> %s" % (conf_data.url, feeds))
+        if _not_valid(conf_data.url, feeds):
             continue
 
         for post in cleanup_feeds(store_record, conf_data.numPosts, feeds['entries']):
@@ -148,6 +147,14 @@ def process(dry_run=False, run_type="local", *files):
     store.write_store(data)
     return data
 
+def _not_valid(url, feeds):
+    if 'status' not in feeds:
+        log.error("Error getting feeds %s -> %s" % (url, feeds))
+        return True
+    elif feeds['status'] is not 200:
+        log.error("Error getting feeds %s %s -> %s" % (url, feeds['status'], feeds))
+        return True
+    return False
 
 def usage():
     print("""Usage: processRss -d <config files>

@@ -17,3 +17,6 @@ zip -rg --exclude=*.pyc ~/rsstotwitter.zip *
 
 cd ~/projects/rssToTwitter/config/
 zip -g ~/rsstotwitter.zip twPostsConfig
+
+cd ~/projects/rssToTwitter/bin/
+zip -g ~/rsstotwitter.zip *.sh
