@@ -147,12 +147,12 @@ class DBBasedDataStore(DataStore):
         """
         self._stores = {}
         log.info("reading db store")
-        conn = None
-        try:
-            conn = self._get_connection()
-            curs = conn.cursor()
+        conn = self._get_connection()
+        with conn.cursor() as curs:
+
             curs.execute("select v_name, v_last_id, t_stamp from store")
             data = curs.fetchone()
+            
             while data is not None:
                 section_name = util.encode(data[0])
                 last_id = data[1]
@@ -167,10 +167,7 @@ class DBBasedDataStore(DataStore):
                     
                 data = curs.fetchone()
                 
-            curs.close()
-        finally:
-            if conn is not None:
-                conn.close()
+        conn.close()
 
     def write_store(self, result_text=None):
         """
@@ -188,11 +185,9 @@ class DBBasedDataStore(DataStore):
         print(results)
         
         log.info("writing db store")
-        conn = None
-        curs = None
-        try:
-            conn = self._get_connection()
-            curs = conn.cursor()
+        
+        conn = self._get_connection()
+        with conn.cursor() as curs:
             curs.execute("select v_name from store")
             existing_names = list(map(lambda rec: rec[0], curs.fetchall()))
             log.info("Existing: %s" % ",".join(existing_names))
@@ -204,21 +199,32 @@ class DBBasedDataStore(DataStore):
                 if not self._dry_run:
                     curs.execute(query, record)
             conn.commit()
-            curs.close()
-        finally:
-            if conn is not None:
-                conn.close()
+        conn.close()
                 
         log.info("Saved %i records" % len(results))
         if result_text is not None:
             result_text.append(results)
         return len(results)
 
+    def clean_audit_log(self, days):
+        """
+        Function is purposely built for cleaning up the logs written to audit table
+        :param days How many days back to go to delete the records
+        :return None
+        """
+        conn = self._get_connection()
+        with conn.cursor() as curs:
+            query = "delete from store_audit where update_ts < now() - interval '%s days'"
+            log.info("Delete audit records %s" % (query % days))
+            if not self._dry_run:
+                curs.execute(query, (days,))
+                conn.commit()
+        conn.close()
+        
     def _get_connection(self):
         import psycopg2
         if self._config.sslmode:
             return psycopg2.connect(self._config.url, sslmode=self._config.sslmode)
         else:
-            return psycopg2.connect(self._config.url)
-            
+            return psycopg2.connect(self._config.url)            
 

@@ -6,7 +6,7 @@
 
 virtualenv -p $PYTHON_VERSION build; \
 source build/bin/activate; \
-pip install -r config/requirements.txt; \
+pip install -r requirements.txt; \
 pushd build/lib/$PYTHON_VERSION/site-packages/; \
 zip -r9 ../../../../rsstotwitter.zip --exclude=*pip* --exclude=*setuptools* *; \
 popd; \
