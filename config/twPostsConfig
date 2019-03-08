@@ -228,5 +228,13 @@ numPosts=1
 url=https://feed.infoq.com/
 numPosts=3
 
+[impact theory]
+url=https://impacttheory.com/blog/feed
+numPosts=1
+
+[Highly scalable]
+url=https://highlyscalable.wordpress.com/feed
+numPosts=1
+
 
 
