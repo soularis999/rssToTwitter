@@ -220,5 +220,13 @@ numPosts=1
 url=https://blog.cloudflare.com/rss/
 numPosts=1
 
+[Lightbend]
+url=https://www.lightbend.com/blog
+numPosts=1
+
+[infoq]
+url=https://feed.infoq.com/
+numPosts=3
+
 
 
